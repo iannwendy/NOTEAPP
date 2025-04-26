@@ -1,0 +1,56 @@
+// Fonts
+@import url('https://fonts.bunny.net/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+// Font Awesome
+@import 'bootstrap-icons/font/bootstrap-icons';
+
+// User preferences
+body.small-font {
+    font-size: 0.85rem;
+}
+
+body.medium-font {
+    font-size: 1rem;
+}
+
+body.large-font {
+    font-size: 1.2rem;
+}
+
+body.dark-theme {
+    background-color: #212529;
+    color: #f8f9fa;
+    
+    .card {
+        background-color: #343a40;
+        color: #f8f9fa;
+    }
+    
+    .navbar {
+        background-color: #343a40 !important;
+        color: #f8f9fa;
+    }
+    
+    .navbar-brand, .nav-link {
+        color: #f8f9fa !important;
+    }
+    
+    .dropdown-menu {
+        background-color: #343a40;
+        color: #f8f9fa;
+    }
+    
+    .dropdown-item {
+        color: #f8f9fa;
+        
+        &:hover {
+            background-color: #495057;
+        }
+    }
+}

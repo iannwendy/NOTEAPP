@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #log {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-info { background-color: #e6f7ff; }
+        .log-success { background-color: #d4edda; }
+        .log-error { background-color: #f8d7da; }
+        .log-warn { background-color: #fff3cd; }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button, input {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        h1 {
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    
+    <div id="connection-status" class="status disconnected">
+        Disconnected
+    </div>
+    
+    <div class="controls">
+        <input type="text" id="app-key" placeholder="Pusher App Key">
+        <input type="text" id="app-cluster" placeholder="Pusher Cluster" value="ap1">
+        <button id="connect-btn">Connect</button>
+        <button id="disconnect-btn" disabled>Disconnect</button>
+    </div>
+    
+    <h3>Pusher Connection Log</h3>
+    <div id="log"></div>
+
+    <script>
+        let pusher = null;
+        const log = document.getElementById('log');
+        const statusEl = document.getElementById('connection-status');
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const appKeyInput = document.getElementById('app-key');
+        const clusterInput = document.getElementById('app-cluster');
+
+        function logMessage(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function updateConnectionStatus(connected) {
+            if (connected) {
+                statusEl.className = 'status connected';
+                statusEl.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        connectBtn.addEventListener('click', function() {
+            const appKey = appKeyInput.value.trim();
+            const cluster = clusterInput.value.trim();
+            
+            if (!appKey) {
+                logMessage('Please enter your Pusher App Key', 'error');
+                return;
+            }
+            
+            try {
+                logMessage(`Connecting to Pusher with key ${appKey} and cluster ${cluster}...`);
+                
+                // Enable pusher logging for debugging
+                Pusher.logToConsole = true;
+                
+                pusher = new Pusher(appKey, {
+                    cluster: cluster,
+                    forceTLS: true
+                });
+                
+                pusher.connection.bind('connecting', function() {
+                    logMessage('Connecting to Pusher...', 'warn');
+                });
+                
+                pusher.connection.bind('connected', function() {
+                    logMessage('Successfully connected to Pusher!', 'success');
+                    updateConnectionStatus(true);
+                    
+                    // Subscribe to a test channel
+                    const channel = pusher.subscribe('test-channel');
+                    logMessage('Subscribed to test-channel', 'info');
+                    
+                    // Listen for events on the channel
+                    channel.bind('test-event', function(data) {
+                        logMessage(`Received event: ${JSON.stringify(data)}`, 'success');
+                    });
+                });
+                
+                pusher.connection.bind('failed', function() {
+                    logMessage('Connection to Pusher failed!', 'error');
+                    updateConnectionStatus(false);
+                });
+                
+                pusher.connection.bind('disconnected', function() {
+                    logMessage('Disconnected from Pusher', 'warn');
+                    updateConnectionStatus(false);
+                });
+                
+                pusher.connection.bind('error', function(err) {
+                    logMessage(`Error: ${err.message}`, 'error');
+                });
+            } catch (error) {
+                logMessage(`Error: ${error.message}`, 'error');
+            }
+        });
+        
+        disconnectBtn.addEventListener('click', function() {
+            if (pusher) {
+                pusher.disconnect();
+                pusher = null;
+                logMessage('Manually disconnected from Pusher', 'info');
+                updateConnectionStatus(false);
+            }
+        });
+        
+        // Initial state
+        logMessage('WebSocket Test Page Loaded', 'info');
+        logMessage('Enter your Pusher App Key and click Connect', 'info');
+    </script>
+</body>
+</html> 
