@@ -2,7 +2,6 @@
 
 A full-featured web application for creating, managing, and sharing notes with real-time collaboration and offline capabilities.
 
-![Notes App Screenshot](screenshots/notes-app.png)
 
 ## ✨ Features
 
