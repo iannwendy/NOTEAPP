@@ -302,7 +302,7 @@ use Illuminate\Support\Facades\Auth;
             }
         }
 
-        // Save note function with offline support
+        // Save note function
         function saveNote(manualSave = false) {
             // Don't save if autoSaveEnabled is false and this is not a manual save
             // This prevents auto-saving during collaborative editing
@@ -313,33 +313,6 @@ use Illuminate\Support\Facades\Auth;
             
             showSaveStatus('Saving...', 'info', true);
             
-            const noteData = {
-                id: currentNoteId,
-                title: title.value,
-                content: content.value,
-                updated_at: new Date().toISOString()
-            };
-            
-            // Check for offline manager first
-            if (window.offlineManager && navigator.onLine === false) {
-                // We're offline and have the offline manager, save locally
-                window.offlineManager.saveNote(noteData)
-                    .then(result => {
-                        if (result.success) {
-                            isDirty = false;
-                            showSaveStatus('Saved offline! Will sync when back online.', 'warning');
-                        } else {
-                            showSaveStatus('Error: ' + result.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error saving offline:', error);
-                        showSaveStatus('Error saving offline: ' + error.message, 'danger');
-                    });
-                return;
-            }
-            
-            // If we're here, either we're online or don't have the offline manager
             // Use fetch API to send the data
             const formData = new FormData();
             formData.append('_token', document.querySelector('input[name="_token"]').value);
@@ -368,44 +341,13 @@ use Illuminate\Support\Facades\Auth;
                 if (data.success) {
                     isDirty = false;
                     showSaveStatus('Saved successfully!', 'success');
-                    
-                    // Also save to local cache if we have the offline manager
-                    if (window.offlineManager) {
-                        const noteToCache = {
-                            id: currentNoteId,
-                            title: title.value,
-                            content: content.value,
-                            updated_at: new Date().toISOString()
-                        };
-                        window.offlineManager.saveToCache('cachedNotes', noteToCache)
-                            .catch(error => {
-                                console.error('Error caching note locally:', error);
-                            });
-                    }
                 } else {
                     showSaveStatus('Error: ' + (data.message || 'Could not save'), 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                
-                // If network error and we have offline manager, try to save offline
-                if (window.offlineManager) {
-                    window.offlineManager.saveNote(noteData)
-                        .then(result => {
-                            if (result.success) {
-                                isDirty = false;
-                                showSaveStatus('Saved offline due to network error', 'warning');
-                            } else {
-                                showSaveStatus('Error: Could not save online or offline', 'danger');
-                            }
-                        })
-                        .catch(err => {
-                            showSaveStatus('Error: Complete save failure', 'danger');
-                        });
-                } else {
-                    showSaveStatus('Error: Could not connect to server', 'danger');
-                }
+                showSaveStatus('Error: Could not connect to server', 'danger');
             });
         }
         

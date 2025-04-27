@@ -520,30 +520,6 @@
                 toast.remove();
             });
         }
-
-        // Cache the note for offline access if the offline manager is available
-        if (window.offlineManager) {
-            const noteData = {
-                id: {{ $note->id }},
-                title: "{{ addslashes($note->title) }}",
-                content: `{!! addslashes($note->content) !!}`,
-                color: "{{ $note->color ?? '#3490dc' }}",
-                updated_at: "{{ $note->updated_at }}",
-                created_at: "{{ $note->created_at }}"
-            };
-            
-            window.offlineManager.saveToCache('cachedNotes', noteData)
-                .then(() => console.log('Note cached successfully for offline access'))
-                .catch(error => console.error('Error caching note:', error));
-            
-            // Show offline indicator if we're offline
-            if (!navigator.onLine) {
-                const offlineStatus = document.getElementById('offlineStatusContainer');
-                if (offlineStatus) {
-                    offlineStatus.classList.remove('d-none');
-                }
-            }
-        }
     });
 </script>
 @endpush

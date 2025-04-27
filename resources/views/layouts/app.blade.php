@@ -14,14 +14,6 @@ use Illuminate\Support\Facades\Route;
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Web App Manifest -->
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
-    <meta name="theme-color" content="#3490dc">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Notes App">
-    <link rel="apple-touch-icon" href="{{ asset('icons/icon-152x152.png') }}">
-
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
@@ -64,15 +56,6 @@ use Illuminate\Support\Facades\Route;
                                     <i class="fas fa-tags me-1"></i> Manage Labels
                                 </a>
                             </li>
-                            
-                            <!-- Offline status indicator -->
-                            <li class="nav-item">
-                                <div id="offline-indicator" class="d-none">
-                                    <span class="badge bg-warning text-dark">
-                                        <i class="fas fa-wifi-slash me-1"></i> Offline Mode
-                                    </span>
-                                </div>
-                            </li>
                         @endauth
                     </ul>
 
@@ -92,14 +75,6 @@ use Illuminate\Support\Facades\Route;
                                 </li>
                             @endif
                         @else
-                            <!-- Sync status indicator -->
-                            <li class="nav-item me-2">
-                                <button id="sync-button" class="btn btn-outline-primary btn-sm mt-1 d-none" onclick="window.offlineManager?.syncData()">
-                                    <i class="fas fa-sync-alt me-1"></i> Sync
-                                    <span id="sync-badge" class="badge rounded-pill bg-danger d-none">0</span>
-                                </button>
-                            </li>
-                            
                             <!-- Notifications Dropdown -->
                             <li class="nav-item dropdown">
                                 @php
@@ -235,7 +210,6 @@ use Illuminate\Support\Facades\Route;
     @stack('scripts')
     <script src="{{ asset('js/refresh-cache.js') }}?v={{ time() }}"></script>
     <script src="{{ asset('js/fix-list-view.js') }}?v={{ time() }}"></script>
-    <script src="{{ asset('js/offline-manager.js') }}?v={{ time() }}"></script>
     
     @auth
     <script>
@@ -346,14 +320,6 @@ use Illuminate\Support\Facades\Route;
                 badge.classList.remove('flash-badge');
             }, 2000);
         }
-        
-        // Show sync button if we have an offline manager
-        if (window.offlineManager) {
-            const syncButton = document.getElementById('sync-button');
-            if (syncButton) {
-                syncButton.classList.remove('d-none');
-            }
-        }
     });
     </script>
     
@@ -375,11 +341,6 @@ use Illuminate\Support\Facades\Route;
         0% { opacity: 1; }
         50% { opacity: 0.2; }
         100% { opacity: 1; }
-    }
-    
-    #offline-indicator {
-        margin-top: 8px;
-        margin-left: 10px;
     }
     </style>
     @endauth
