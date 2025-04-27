@@ -171,11 +171,25 @@
                 
                 const response = await fetch('{{ route('notes.store') }}', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
                     throw new Error('Network response was not ok: ' + response.status);
+                }
+                
+                // Check for content being JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const textResponse = await response.text();
+                    console.error('Expected JSON but got:', contentType, textResponse.substring(0, 500));
+                    throw new Error('Invalid response format. Expected JSON but got: ' + contentType);
                 }
                 
                 const result = await response.json();

@@ -61,6 +61,15 @@ class NoteController extends Controller
     public function store(Request $request)
     {
         try {
+            // Log the request for debugging
+            Log::info('Note store request: ', [
+                'user_id' => Auth::id(),
+                'is_ajax' => $request->ajax(),
+                'is_autosave' => $request->has('_autosave'),
+                'has_temp_id' => $request->has('temp_id'),
+                'ip' => $request->ip()
+            ]);
+            
             $validated = $request->validate([
                 'title' => 'required|max:255',
                 'content' => 'required',
@@ -153,7 +162,15 @@ class NoteController extends Controller
             return redirect()->route('notes.show', $note)
                 ->with('success', 'Note created successfully.');
         } catch (\Exception $e) {
-            Log::error('Error creating note: ' . $e->getMessage());
+            Log::error('Error creating note: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id(),
+                'is_ajax' => $request->ajax(),
+                'is_autosave' => $request->has('_autosave')
+            ]);
             
             if ($request->ajax() || $request->has('_autosave')) {
                 return response()->json([
