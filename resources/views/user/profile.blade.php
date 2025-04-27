@@ -20,7 +20,6 @@
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
                             <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}'s Avatar" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random&color=fff'; console.error('Failed to load avatar image');">
-                            <a href="{{ route('user.edit-avatar') }}" class="btn btn-primary btn-sm">Change Avatar</a>
                         </div>
                         <div class="col-md-8">
                             <h3>{{ $user->name }}</h3>
@@ -34,6 +33,7 @@
                             @endif
                             
                             <div class="mt-4">
+                                <a href="{{ route('user.edit-avatar') }}" class="btn btn-primary me-2">Change Avatar</a>
                                 <a href="{{ route('user.edit-profile') }}" class="btn btn-outline-primary me-2">Edit Profile</a>
                                 <a href="{{ route('user.edit-password') }}" class="btn btn-outline-secondary">Change Password</a>
                             </div>
