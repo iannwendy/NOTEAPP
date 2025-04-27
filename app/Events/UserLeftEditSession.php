@@ -16,22 +16,22 @@ class UserLeftEditSession implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $note;
-    public $user;
+    public $noteId;
     public $userId;
     public $userName;
     public $userAvatarUrl;
+    public $timestamp;
 
     /**
      * Create a new event instance.
      */
     public function __construct(Note $note, User $user)
     {
-        $this->note = $note;
-        $this->user = $user;
+        $this->noteId = $note->id;
         $this->userId = $user->id;
         $this->userName = $user->name;
         $this->userAvatarUrl = $user->avatar_url;
+        $this->timestamp = now()->toIso8601String();
     }
 
     /**
@@ -42,7 +42,7 @@ class UserLeftEditSession implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PresenceChannel('note.' . $this->note->id),
+            new PresenceChannel('note.' . $this->noteId),
         ];
     }
     

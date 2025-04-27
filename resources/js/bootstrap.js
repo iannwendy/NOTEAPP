@@ -27,24 +27,31 @@ Pusher.logToConsole = true;
 
 // Determine if we're in production by checking the URL
 const isProduction = window.location.hostname.includes('onrender.com');
-const host = isProduction ? 'noteapp-7orp.onrender.com' : window.location.hostname;
-const wsProtocol = isProduction ? 'wss' : 'ws';
-const httpProtocol = isProduction ? 'https' : 'http';
+const host = isProduction ? window.location.hostname : window.location.hostname; // Use same host for both
+const wsPort = isProduction ? 443 : 6001;
+
+console.log('Echo configuration:', {
+    isProduction,
+    host,
+    port: wsPort
+});
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY || 'aa6e129c9fdc2f8333c3',
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1',
+    key: 'aa6e129c9fdc2f8333c3', // Hardcoded key for simplicity
     wsHost: host,
-    wsPort: isProduction ? 443 : 6001,
-    wssPort: isProduction ? 443 : 6001,
+    wsPort: wsPort,
+    wssPort: wsPort,
     forceTLS: isProduction,
     encrypted: true,
     disableStats: true,
     enabledTransports: ['ws', 'wss'],
+    cluster: 'ap1',
+    authEndpoint: '/broadcasting/auth', // Set explicit auth endpoint
     auth: {
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'Accept': 'application/json'
         }
     }
 });

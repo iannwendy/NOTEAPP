@@ -32,7 +32,7 @@ class NoteContentUpdated implements ShouldBroadcast
         $this->content = $content;
         $this->userId = $user->id;
         $this->userName = $user->name;
-        $this->userAvatarUrl = $user->avatar_url ? asset('storage/' . $user->avatar_url) : null;
+        $this->userAvatarUrl = $user->avatar_url;
         $this->timestamp = now()->toIso8601String();
     }
 
