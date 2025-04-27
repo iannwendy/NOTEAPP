@@ -59,7 +59,6 @@ use Illuminate\Support\Facades\Auth;
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary save-button">Save Note</button>
-                            <button type="button" class="btn btn-outline-info ms-2" id="testWebSocketBtn">Test WebSocket</button>
                             <div id="autoSaveSpinner" class="mt-2 d-none">
                                 <div class="d-flex align-items-center">
                                     <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
@@ -154,26 +153,26 @@ use Illuminate\Support\Facades\Auth;
         if (window.Echo) {
             window.Echo.connector.pusher.connection.bind('connected', (data) => {
                 console.log('✅ Pusher Connected!', data);
-                showSaveStatus('WebSocket connection established', 'success');
+                // WebSocket connection status now hidden from users
             });
             
             window.Echo.connector.pusher.connection.bind('error', (error) => {
                 console.error('❌ Pusher Connection Error:', error);
-                showSaveStatus('WebSocket connection error! Check console for details', 'danger');
+                // WebSocket error status now hidden from users
             });
             
             window.Echo.connector.pusher.connection.bind('disconnected', () => {
                 console.log('⚠️ Pusher Disconnected!');
-                showSaveStatus('WebSocket disconnected. Attempting to reconnect...', 'warning');
+                // WebSocket disconnection status now hidden from users
             });
             
             window.Echo.connector.pusher.connection.bind('connecting', () => {
                 console.log('🔄 Pusher Connecting...');
-                showSaveStatus('Connecting to WebSocket...', 'info');
+                // WebSocket connecting status now hidden from users
             });
         } else {
             console.error('❌ Echo is not defined! Broadcasting will not work.');
-            showSaveStatus('Real-time collaboration unavailable - Echo not defined', 'danger');
+            // Echo not defined status now hidden from users
         }
         
         const form = document.getElementById('noteForm');
