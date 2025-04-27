@@ -21,7 +21,17 @@ class FrameGuard
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         
         // Set Content-Security-Policy header
-        $response->headers->set('Content-Security-Policy', "frame-ancestors 'self'");
+        $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data:; frame-ancestors 'self'");
+        
+        // Add Strict-Transport-Security header (HSTS) in production
+        if (config('app.env') === 'production') {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+        
+        // Add other security headers
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         
         // Set CORS headers for AJAX requests
         if ($request->ajax() || $request->expectsJson()) {
