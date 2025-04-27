@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}?v={{ time() }}">
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body class="{{ auth()->check() && isset(auth()->user()->preferences['font_size']) ? auth()->user()->preferences['font_size'] . '-font' : 'medium-font' }} {{ auth()->check() && isset(auth()->user()->preferences['theme']) && auth()->user()->preferences['theme'] === 'dark' ? 'dark-theme' : '' }}">
     <div id="app">
