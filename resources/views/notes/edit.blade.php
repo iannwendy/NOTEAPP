@@ -1148,28 +1148,42 @@ use Illuminate\Support\Facades\Auth;
         document.getElementById('testWebSocketBtn').addEventListener('click', function() {
             showSaveStatus('Testing WebSocket connection...', 'info');
             
+            // Show detailed connection information
+            console.log('Current WebSocket state:');
+            console.log('- Echo initialized:', !!window.Echo);
+            
+            if (window.Echo) {
+                console.log('- Socket ID:', window.Echo.socketId());
+                console.log('- Connection state:', window.Echo.connector.pusher.connection.state);
+            }
+            
             // Reset any existing connection
             if (window.Echo) {
                 try {
-                    window.Echo.connector.pusher.disconnect();
+                    // Create a direct Pusher connection for testing
+                    const testPusher = new Pusher('aa6e129c9fdc2f8333c3', {
+                        cluster: 'ap1',
+                        forceTLS: true
+                    });
                     
-                    setTimeout(() => {
-                        window.Echo.connector.pusher.connect();
+                    testPusher.connection.bind('connected', function() {
+                        console.log('✅ Direct Pusher connection successful!');
+                        showSaveStatus('Direct Pusher connection successful! Check console for details', 'success');
                         
-                        // Send a test whisper after reconnection
+                        // Try to connect Echo after direct connection succeeds
+                        window.Echo.connector.pusher.disconnect();
                         setTimeout(() => {
-                            try {
-                                channel.whisper('typing', {
-                                    user: '{{ Auth::user()->name }}',
-                                    message: 'Connection test at ' + new Date().toLocaleTimeString()
-                                });
-                                showSaveStatus('Test whisper sent successfully', 'success');
-                            } catch (err) {
-                                console.error('Error sending test whisper:', err);
-                                showSaveStatus('Error sending test whisper: ' + err.message, 'danger');
-                            }
-                        }, 1000);
-                    }, 500);
+                            window.Echo.connector.pusher.connect();
+                        }, 500);
+                    });
+                    
+                    testPusher.connection.bind('failed', function(error) {
+                        console.error('❌ Direct Pusher connection failed:', error);
+                        showSaveStatus('Direct Pusher connection failed! Check console for details', 'danger');
+                    });
+                    
+                    // Show connection attempt status
+                    showSaveStatus('Testing direct Pusher connection...', 'info');
                     
                 } catch (err) {
                     console.error('Error during connection test:', err);
