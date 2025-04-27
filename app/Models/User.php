@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -84,9 +85,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getAvatarUrlAttribute()
     {
         if ($this->avatar) {
-            return asset('storage/avatars/' . $this->avatar);
+            $path = 'avatars/' . $this->avatar;
+            // Check if the file exists in the storage
+            if (Storage::disk('public')->exists($path)) {
+                return asset('storage/' . $path);
+            }
         }
         
+        // Return default avatar if no avatar or file doesn't exist
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
     }
 }

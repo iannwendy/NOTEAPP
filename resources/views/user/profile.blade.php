@@ -19,7 +19,7 @@
 
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
-                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}'s Avatar" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}'s Avatar" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random&color=fff'; console.error('Failed to load avatar image');">
                             <a href="{{ route('user.edit-avatar') }}" class="btn btn-primary btn-sm">Change Avatar</a>
                         </div>
                         <div class="col-md-8">

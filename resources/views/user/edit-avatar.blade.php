@@ -16,7 +16,7 @@
                             <div class="mb-3">
                                 <strong>Current Avatar</strong>
                             </div>
-                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}'s Avatar" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}'s Avatar" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=random&color=fff'; console.error('Failed to load avatar image');">
                         </div>
                         <div class="col-md-8">
                             <form method="POST" action="{{ route('user.update-avatar') }}" enctype="multipart/form-data">

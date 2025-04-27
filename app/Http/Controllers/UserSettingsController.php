@@ -68,20 +68,31 @@ class UserSettingsController extends Controller
         
         $user = Auth::user();
         
-        // Delete old avatar if exists
-        if ($user->avatar) {
-            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        try {
+            // Delete old avatar if exists
+            if ($user->avatar) {
+                Storage::disk('public')->delete('avatars/' . $user->avatar);
+            }
+            
+            // Store new avatar
+            $avatarName = $user->id . '_' . time() . '.' . $request->avatar->extension();
+            $uploadPath = $request->avatar->storeAs('avatars', $avatarName, 'public');
+            
+            if (!$uploadPath) {
+                throw new \Exception('Failed to save avatar file.');
+            }
+            
+            // Update user record
+            $user->avatar = $avatarName;
+            $user->save();
+            
+            return redirect()->route('user.profile')->with('success', 'Avatar updated successfully.');
+        } catch (\Exception $e) {
+            // Log the error
+            \Log::error('Avatar upload failed: ' . $e->getMessage());
+            
+            return redirect()->back()->withErrors(['avatar' => 'Failed to update avatar: ' . $e->getMessage()]);
         }
-        
-        // Store new avatar
-        $avatarName = $user->id . '_' . time() . '.' . $request->avatar->extension();
-        $request->avatar->storeAs('avatars', $avatarName, 'public');
-        
-        // Update user record
-        $user->avatar = $avatarName;
-        $user->save();
-        
-        return redirect()->route('user.profile')->with('success', 'Avatar updated successfully.');
     }
     
     /**

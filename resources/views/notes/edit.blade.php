@@ -537,25 +537,48 @@ use Illuminate\Support\Facades\Auth;
             avatar.style.cursor = 'pointer';
             avatar.style.border = '2px solid ' + (isCurrentUser ? '#28a745' : 'transparent'); // Green border for current user
             
-            // Check for avatar URL in multiple possible properties
-            const avatarUrl = user.avatar_url || null;
-            console.log(`User ${user.name} avatar URL:`, avatarUrl);
+            // Check for avatar URL
+            const avatarUrl = user.avatar_url || '';
             
-            if (avatarUrl) {
-                // Create an image element for the avatar
-                const img = document.createElement('img');
-                img.src = avatarUrl;
-                img.className = 'rounded-circle';
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
-                avatar.appendChild(img);
-            } else {
-                // Use a colored circle with the first letter of the user's name
+            console.log(`User ${user.name} (${user.id}) avatar info:`, {
+                avatarUrl: avatarUrl,
+                user: user,
+                isCurrentUser: isCurrentUser
+            });
+            
+            // Create fallback avatar with initials
+            function createFallbackAvatar() {
+                avatar.innerHTML = ''; // Clear any children
                 avatar.style.backgroundColor = getColorForUser(user.id);
                 avatar.style.textAlign = 'center';
                 avatar.style.lineHeight = '26px';
                 avatar.textContent = user.name.charAt(0).toUpperCase();
+            }
+            
+            if (avatarUrl && avatarUrl !== 'undefined' && avatarUrl !== 'null') {
+                try {
+                    // Create an image element for the avatar
+                    const img = document.createElement('img');
+                    img.src = avatarUrl;
+                    img.className = 'rounded-circle';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    
+                    // Handle image loading errors
+                    img.onerror = function() {
+                        console.error('Failed to load avatar image:', avatarUrl);
+                        createFallbackAvatar();
+                    };
+                    
+                    // Add the image to the avatar
+                    avatar.appendChild(img);
+                } catch (e) {
+                    console.error('Error creating avatar image:', e);
+                    createFallbackAvatar();
+                }
+            } else {
+                createFallbackAvatar();
             }
             
             // Add hover tooltip
