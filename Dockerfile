@@ -34,12 +34,19 @@ RUN npm install && npm run build
 # Production stage
 FROM php:8.2-apache as production
 
+# Install Node.js for echo server
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get update \
+    && apt-get install -y nodejs \
+    && npm install -g laravel-echo-server
+
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libzip-dev \
+    supervisor \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
     && a2enmod rewrite
 

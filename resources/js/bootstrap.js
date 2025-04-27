@@ -25,16 +25,23 @@ window.Pusher = Pusher;
 // Enable pusher logging for easier debugging
 Pusher.logToConsole = true;
 
+// Determine if we're in production by checking the URL
+const isProduction = window.location.hostname.includes('onrender.com');
+const host = isProduction ? 'noteapp-7orp.onrender.com' : window.location.hostname;
+const wsProtocol = isProduction ? 'wss' : 'ws';
+const httpProtocol = isProduction ? 'https' : 'http';
+
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'ap1',
-    wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-    wsPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-    wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
-    forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https', 
+    key: import.meta.env.VITE_PUSHER_APP_KEY || 'aa6e129c9fdc2f8333c3',
+    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1',
+    wsHost: host,
+    wsPort: isProduction ? 443 : 6001,
+    wssPort: isProduction ? 443 : 6001,
+    forceTLS: isProduction,
+    encrypted: true,
+    disableStats: true,
     enabledTransports: ['ws', 'wss'],
-    disableStats: false,
     auth: {
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')

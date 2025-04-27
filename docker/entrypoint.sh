@@ -9,7 +9,7 @@ APP_NAME=NotesApp
 APP_ENV=production
 APP_KEY=
 APP_DEBUG=false
-APP_URL=${APP_URL:-http://localhost}
+APP_URL=${APP_URL:-https://noteapp-7orp.onrender.com}
 ASSET_URL=${ASSET_URL:-}
 
 LOG_CHANNEL=stack
@@ -25,14 +25,25 @@ DB_PASSWORD=${DB_PASSWORD:-}
 BROADCAST_DRIVER=${BROADCAST_DRIVER:-pusher}
 CACHE_DRIVER=file
 FILESYSTEM_DISK=local
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
 
-PUSHER_APP_ID=${PUSHER_APP_ID:-}
-PUSHER_APP_KEY=${PUSHER_APP_KEY:-}
-PUSHER_APP_SECRET=${PUSHER_APP_SECRET:-}
-PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER:-mt1}
+PUSHER_APP_ID=${PUSHER_APP_ID:-1976166}
+PUSHER_APP_KEY=${PUSHER_APP_KEY:-aa6e129c9fdc2f8333c3}
+PUSHER_APP_SECRET=${PUSHER_APP_SECRET:-0c038050207fccdaed34}
+PUSHER_HOST=${PUSHER_HOST:-noteapp-7orp.onrender.com}
+PUSHER_PORT=${PUSHER_PORT:-443}
+PUSHER_SCHEME=${PUSHER_SCHEME:-https}
+PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER:-ap1}
+
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+
+FORCE_HTTPS=true
 EOF
 fi
 
@@ -83,6 +94,13 @@ echo "Setting file permissions..."
 chown -R www-data:www-data /var/www/html/storage
 chown -R www-data:www-data /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/public/build
+
+# Set up supervisor if configuration exists
+if [ -d "/etc/supervisor/conf.d" ]; then
+    echo "Setting up supervisor..."
+    cp -f /var/www/html/docker/supervisor/*.conf /etc/supervisor/conf.d/
+    supervisord -c /etc/supervisor/supervisord.conf
+fi
 
 # Execute the passed command
 echo "Starting application..."

@@ -242,21 +242,29 @@ use Illuminate\Support\Facades\Route;
     document.addEventListener('DOMContentLoaded', function() {
         // Set up notification listener if Echo is available
         if (window.Echo) {
-            // Listen for notifications on the user's private channel
-            window.Echo.private('App.Models.User.{{ Auth::id() }}')
-                .notification((notification) => {
-                    console.log('New notification received:', notification);
+            // Check if we're on the production domain
+            const isProduction = window.location.hostname.includes('onrender.com');
+            console.log('Setting up Echo on:', isProduction ? 'Production' : 'Development', 'environment');
+            
+            try {
+                // Listen for notifications on the user's private channel
+                window.Echo.private('App.Models.User.{{ Auth::id() }}')
+                    .notification((notification) => {
+                        console.log('New notification received:', notification);
+                        
+                        // Update notification badge
+                        updateNotificationBadge(1);
+                        
+                        // Add notification to the container
+                        if (notification.type === 'App\\Notifications\\NoteSharedNotification') {
+                            addNotificationToContainer(notification);
+                        }
+                    });
                     
-                    // Update notification badge
-                    updateNotificationBadge(1);
-                    
-                    // Add notification to the container
-                    if (notification.type === 'App\\Notifications\\NoteSharedNotification') {
-                        addNotificationToContainer(notification);
-                    }
-                });
-                
-            console.log('Notification listener set up for user {{ Auth::id() }}');
+                console.log('Notification listener set up for user {{ Auth::id() }}');
+            } catch (error) {
+                console.error('Error setting up Echo listener:', error);
+            }
         } else {
             console.error('Echo is not defined. Real-time notifications will not work.');
         }
