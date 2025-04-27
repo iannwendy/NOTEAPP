@@ -28,8 +28,8 @@ COPY . /app
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev --no-interaction
 
-# Install JS dependencies and build assets
-RUN npm ci && npm run build
+# Install NPM dependencies and build Vite assets
+RUN npm install && npm run build
 
 # Production stage
 FROM php:8.2-apache as production
