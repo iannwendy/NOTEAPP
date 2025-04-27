@@ -55,4 +55,12 @@ class NoteTitleUpdated implements ShouldBroadcast
     {
         return 'note.title.updated';
     }
+
+    /**
+     * Determine if this event should broadcast.
+     */
+    public function broadcastWhen(): bool
+    {
+        return true;
+    }
 } 

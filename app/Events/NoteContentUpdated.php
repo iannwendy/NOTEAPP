@@ -55,4 +55,12 @@ class NoteContentUpdated implements ShouldBroadcast
     {
         return 'note.content.updated';
     }
+
+    /**
+     * Determine if this event should broadcast.
+     */
+    public function broadcastWhen(): bool
+    {
+        return true;
+    }
 } 

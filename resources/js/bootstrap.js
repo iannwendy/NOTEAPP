@@ -27,7 +27,8 @@ Pusher.logToConsole = true;
 
 // Determine if we're in production by checking the URL
 const isProduction = window.location.hostname.includes('onrender.com');
-const host = isProduction ? window.location.hostname : window.location.hostname; // Use same host for both
+// Fix: Use different hosts for production vs local development
+const host = isProduction ? window.location.hostname : 'localhost';
 const wsPort = isProduction ? 443 : 6001;
 
 console.log('Echo configuration:', {
@@ -47,6 +48,7 @@ window.Echo = new Echo({
     disableStats: true,
     enabledTransports: ['ws', 'wss'],
     cluster: 'ap1',
+    debug: true,
     authEndpoint: '/broadcasting/auth', // Set explicit auth endpoint
     auth: {
         headers: {

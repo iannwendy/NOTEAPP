@@ -511,6 +511,17 @@ class NoteController extends Controller
             // Check if we're in broadcast-only mode (collaborative editing)
             $broadcastOnly = $request->has('_broadcast_only');
             
+            // Log the request data for debugging
+            Log::debug('Real-time update request', [
+                'user_id' => Auth::id(),
+                'note_id' => $note->id,
+                'socket_id' => $request->header('X-Socket-ID'),
+                'broadcast_only' => $broadcastOnly,
+                'has_title' => $request->has('title'),
+                'has_content' => $request->has('content'),
+                'request_data' => $request->all()
+            ]);
+            
             // Handle title update
             if ($request->has('title')) {
                 // Only save the note if we're not in broadcast-only mode

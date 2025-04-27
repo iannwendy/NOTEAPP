@@ -59,6 +59,7 @@ use Illuminate\Support\Facades\Auth;
 
                         <div class="mb-3">
                             <button type="submit" class="btn btn-primary save-button">Save Note</button>
+                            <button type="button" class="btn btn-outline-info ms-2" id="testWebSocketBtn">Test WebSocket</button>
                             <div id="autoSaveSpinner" class="mt-2 d-none">
                                 <div class="d-flex align-items-center">
                                     <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
@@ -125,6 +126,18 @@ use Illuminate\Support\Facades\Auth;
     body.dark-theme .collaboration-toast .btn-close {
         filter: invert(1) grayscale(100%) brightness(200%);
     }
+    
+    /* Connection status indicator */
+    .connection-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .connection-status.connected { background-color: #28a745; }
+    .connection-status.disconnected { background-color: #dc3545; }
+    .connection-status.connecting { background-color: #ffc107; }
 </style>
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
@@ -141,13 +154,26 @@ use Illuminate\Support\Facades\Auth;
         if (window.Echo) {
             window.Echo.connector.pusher.connection.bind('connected', (data) => {
                 console.log('✅ Pusher Connected!', data);
+                showSaveStatus('WebSocket connection established', 'success');
             });
             
             window.Echo.connector.pusher.connection.bind('error', (error) => {
                 console.error('❌ Pusher Connection Error:', error);
+                showSaveStatus('WebSocket connection error! Check console for details', 'danger');
+            });
+            
+            window.Echo.connector.pusher.connection.bind('disconnected', () => {
+                console.log('⚠️ Pusher Disconnected!');
+                showSaveStatus('WebSocket disconnected. Attempting to reconnect...', 'warning');
+            });
+            
+            window.Echo.connector.pusher.connection.bind('connecting', () => {
+                console.log('🔄 Pusher Connecting...');
+                showSaveStatus('Connecting to WebSocket...', 'info');
             });
         } else {
             console.error('❌ Echo is not defined! Broadcasting will not work.');
+            showSaveStatus('Real-time collaboration unavailable - Echo not defined', 'danger');
         }
         
         const form = document.getElementById('noteForm');
@@ -404,6 +430,9 @@ use Illuminate\Support\Facades\Auth;
             // Debug data being sent
             console.log(`Sending update - field: ${field}, socketId: ${window.Echo?.socketId() || 'not available'}`);
             
+            // Show sending indicator
+            showSaveStatus(`Broadcasting ${field} update...`, 'info');
+            
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -415,15 +444,19 @@ use Illuminate\Support\Facades\Auth;
             })
             .then(response => {
                 if (!response.ok) {
+                    console.error(`Server responded with ${response.status}: ${response.statusText}`);
+                    showSaveStatus(`Error sending update: ${response.status} ${response.statusText}`, 'danger');
                     throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
                 }
                 return response.json();
             })
             .then(data => {
                 console.log('Real-time update response:', data);
+                showSaveStatus(`${field} update broadcasted successfully`, 'success');
             })
             .catch(error => {
                 console.error('Error sending real-time update:', error);
+                showSaveStatus(`Failed to broadcast update: ${error.message}`, 'danger');
             });
         }
         
@@ -705,6 +738,18 @@ use Illuminate\Support\Facades\Auth;
                 });
             }, 2000);
             
+            // Debug event listeners
+            console.log('Setting up event listeners for channel:', channelName);
+            console.log('Socket ID:', window.Echo.socketId());
+            
+            // Add debug info to collaboration alert
+            const debugInfo = document.createElement('div');
+            debugInfo.className = 'mt-2 text-muted';
+            debugInfo.innerHTML = `
+                <small>Debug: Channel ${channelName} | Socket: ${window.Echo.socketId() || 'not connected'}</small>
+            `;
+            collaborationAlert.querySelector('div').appendChild(debugInfo);
+            
             // Manually add current user to collaborators - fix for avatar display
             // Need to do this because the current user's data is not provided in the 'here' callback
             const currentUser = {
@@ -815,6 +860,13 @@ use Illuminate\Support\Facades\Auth;
             // Listen for note title updates
             channel.listen('.note.title.updated', function(e) {
                 console.log('Title update event received:', e);
+                
+                // Update debug panel
+                const debugInfo = document.querySelector('#collaborationAlert .mt-2.text-muted small');
+                if (debugInfo) {
+                    debugInfo.textContent = `Last event: title update from ${e.userName} at ${new Date().toLocaleTimeString()}`;
+                }
+                
                 // Only update if the change came from someone else
                 if (e.userId !== {{ Auth::id() }}) {
                     isProcessingExternalUpdate = true;
@@ -856,12 +908,21 @@ use Illuminate\Support\Facades\Auth;
                     showSaveStatus(`${e.userName} updated the title`, 'info');
                     
                     isProcessingExternalUpdate = false;
+                } else {
+                    console.log('Ignoring own title update event');
                 }
             });
 
             // Listen for note content updates
             channel.listen('.note.content.updated', function(e) {
                 console.log('Content update event received:', e);
+                
+                // Update debug panel
+                const debugInfo = document.querySelector('#collaborationAlert .mt-2.text-muted small');
+                if (debugInfo) {
+                    debugInfo.textContent = `Last event: content update from ${e.userName} at ${new Date().toLocaleTimeString()}`;
+                }
+                
                 // Only update if the change came from someone else
                 if (e.userId !== {{ Auth::id() }}) {
                     isProcessingExternalUpdate = true;
@@ -908,6 +969,8 @@ use Illuminate\Support\Facades\Auth;
                     showSaveStatus(`${e.userName} updated the content`, 'info');
                     
                     isProcessingExternalUpdate = false;
+                } else {
+                    console.log('Ignoring own content update event');
                 }
             });
 
@@ -1080,6 +1143,42 @@ use Illuminate\Support\Facades\Auth;
         setTimeout(() => {
             testPusher.disconnect();
         }, 10000);
+        
+        // Add test WebSocket button handler
+        document.getElementById('testWebSocketBtn').addEventListener('click', function() {
+            showSaveStatus('Testing WebSocket connection...', 'info');
+            
+            // Reset any existing connection
+            if (window.Echo) {
+                try {
+                    window.Echo.connector.pusher.disconnect();
+                    
+                    setTimeout(() => {
+                        window.Echo.connector.pusher.connect();
+                        
+                        // Send a test whisper after reconnection
+                        setTimeout(() => {
+                            try {
+                                channel.whisper('typing', {
+                                    user: '{{ Auth::user()->name }}',
+                                    message: 'Connection test at ' + new Date().toLocaleTimeString()
+                                });
+                                showSaveStatus('Test whisper sent successfully', 'success');
+                            } catch (err) {
+                                console.error('Error sending test whisper:', err);
+                                showSaveStatus('Error sending test whisper: ' + err.message, 'danger');
+                            }
+                        }, 1000);
+                    }, 500);
+                    
+                } catch (err) {
+                    console.error('Error during connection test:', err);
+                    showSaveStatus('Connection test failed: ' + err.message, 'danger');
+                }
+            } else {
+                showSaveStatus('Echo not initialized - cannot test connection', 'danger');
+            }
+        });
     });
 </script>
 @endpush
