@@ -1,6 +1,6 @@
 # Notes App - Modern Note Management Application
 
-A full-featured web application for creating, managing, and sharing notes with real-time collaboration and offline capabilities.
+A full-featured web application for creating, managing, and sharing notes with real-time collaboration.
 
 
 ## ✨ Features
@@ -24,17 +24,11 @@ A full-featured web application for creating, managing, and sharing notes with r
 - User profile and avatar management
 - Email notifications for important actions
 
-### Advanced Features
-- **Progressive Web App (PWA)** with offline capabilities
-- Continue creating and editing notes even without internet connection
-- Automatic synchronization when connection is restored
-- Install as a standalone application on supported devices
-
 ## 🚀 Technologies Used
 
 ### Backend
 - **PHP 8.2** with Laravel 12.x framework
-- **MySQL/SQLite** database
+- **MySQL** database
 - **Laravel Echo Server** for WebSocket support
 - **Pusher** for real-time event broadcasting
 
@@ -43,8 +37,6 @@ A full-featured web application for creating, managing, and sharing notes with r
 - **SASS** for custom styling
 - **JavaScript** with modern ES6+ features
 - **Laravel Echo** and **Pusher.js** for real-time client updates
-- **Service Workers** for offline functionality
-- **IndexedDB** for client-side storage
 
 ### Development & Deployment
 - **Vite** for modern frontend asset bundling
@@ -56,7 +48,7 @@ A full-featured web application for creating, managing, and sharing notes with r
 - PHP 8.2 or higher
 - Composer 2.x
 - Node.js 18.x or higher with NPM
-- MySQL 8.x, MariaDB, or SQLite
+- MySQL 8.x or MariaDB
 - Web server (Apache/Nginx) or PHP's built-in server for development
 
 ## 🔧 Installation
@@ -91,16 +83,6 @@ A full-featured web application for creating, managing, and sharing notes with r
    DB_DATABASE=notes_app
    DB_USERNAME=root
    DB_PASSWORD=
-   ```
-   
-   For SQLite (simpler setup for development):
-   ```
-   DB_CONNECTION=sqlite
-   # Comment out or remove the other DB_* variables
-   ```
-   Then create the SQLite database file:
-   ```bash
-   touch database/database.sqlite
    ```
 
 6. **Configure Pusher for real-time features in `.env`**:
@@ -165,20 +147,6 @@ A full-featured web application for creating, managing, and sharing notes with r
 
 3. Set up a process manager like Supervisor to keep the Echo server running.
 
-## 📱 Progressive Web App (PWA) Features
-
-The application supports PWA installation and offline functionality:
-
-- **Installable**: Add to home screen on mobile devices or install as a desktop app
-- **Offline Support**: Continue creating and editing notes without internet connection
-- **Background Sync**: Automatically synchronize changes when connection is restored
-- **Cached Resources**: Fast loading with cached assets and previously viewed notes
-
-To take full advantage of the offline capabilities:
-1. Visit the application in a supported browser (Chrome, Edge, etc.)
-2. Install it when prompted or use the browser's "Install" option
-3. The app will continue to work even when offline
-
 ## 📖 Usage Guide
 
 ### Managing Notes
@@ -194,12 +162,6 @@ To take full advantage of the offline capabilities:
 - Set permissions to read-only or edit for each collaborator
 - See who's editing a note in real-time with user indicators
 - Receive notifications when notes are shared with you
-
-### Offline Usage
-- Notes you've viewed will be available offline
-- Create and edit notes while offline
-- Changes will sync automatically when you reconnect
-- A sync indicator shows pending changes waiting to be synchronized
 
 ## 👥 Contributors
 
