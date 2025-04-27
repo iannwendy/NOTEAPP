@@ -1,10 +1,39 @@
 #!/bin/bash
 set -e
 
-# Create .env file if it doesn't exist
+# Create a default .env file if it doesn't exist
 if [ ! -f .env ]; then
-    echo "Creating .env file..."
-    cp .env.example .env
+    echo "Creating basic .env file..."
+    cat > .env << EOF
+APP_NAME=NotesApp
+APP_ENV=production
+APP_KEY=
+APP_DEBUG=false
+APP_URL=${APP_URL:-http://localhost}
+ASSET_URL=${ASSET_URL:-}
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+DB_CONNECTION=${DB_CONNECTION:-mysql}
+DB_HOST=${DB_HOST:-mysql}
+DB_PORT=${DB_PORT:-3306}
+DB_DATABASE=${DB_DATABASE:-laravel}
+DB_USERNAME=${DB_USERNAME:-root}
+DB_PASSWORD=${DB_PASSWORD:-}
+
+BROADCAST_DRIVER=${BROADCAST_DRIVER:-pusher}
+CACHE_DRIVER=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+PUSHER_APP_ID=${PUSHER_APP_ID:-}
+PUSHER_APP_KEY=${PUSHER_APP_KEY:-}
+PUSHER_APP_SECRET=${PUSHER_APP_SECRET:-}
+PUSHER_APP_CLUSTER=${PUSHER_APP_CLUSTER:-mt1}
+EOF
 fi
 
 # Generate application key if not set

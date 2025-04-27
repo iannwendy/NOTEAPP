@@ -51,6 +51,7 @@ This guide will help you deploy the Notes App on Render.com using Docker with a 
    APP_ENV=production
    APP_DEBUG=false
    APP_URL=https://your-app-name.onrender.com
+   ASSET_URL=https://your-app-name.onrender.com
    
    DB_CONNECTION=mysql (or pgsql for PostgreSQL)
    DB_HOST=your-db-host
