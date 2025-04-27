@@ -25,11 +25,10 @@ window.Pusher = Pusher;
 // Enable pusher logging for easier debugging
 Pusher.logToConsole = true;
 
-// Determine if we're in production by checking the URL
+// Configuration approach that works with both local and production
 const isProduction = window.location.hostname.includes('onrender.com');
-// Fix: Use different hosts for production vs local development
-const host = isProduction ? window.location.hostname : 'localhost';
-const wsPort = isProduction ? 443 : 6001;
+const host = isProduction ? window.location.hostname : 'pusher.com';
+const wsPort = isProduction ? 443 : 443;
 
 console.log('Echo configuration:', {
     isProduction,
@@ -40,16 +39,12 @@ console.log('Echo configuration:', {
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: 'aa6e129c9fdc2f8333c3', // Hardcoded key for simplicity
-    wsHost: host,
-    wsPort: wsPort,
-    wssPort: wsPort,
-    forceTLS: isProduction,
+    cluster: 'ap1',
+    forceTLS: true,
     encrypted: true,
     disableStats: true,
-    enabledTransports: ['ws', 'wss'],
-    cluster: 'ap1',
     debug: true,
-    authEndpoint: '/broadcasting/auth', // Set explicit auth endpoint
+    authEndpoint: '/broadcasting/auth',
     auth: {
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
