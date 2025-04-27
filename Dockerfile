@@ -22,21 +22,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy and install dependencies
-COPY composer.json composer.lock ./
-RUN composer install --no-scripts --no-autoloader --no-interaction
+# Copy entire application first to ensure all files are available
+COPY . /app
 
-# Install and build frontend assets
-COPY package.json package-lock.json ./
-RUN npm install
-COPY vite.config.js ./
-COPY resources/ ./resources/
-COPY public/ ./public/
-RUN npm run build
+# Install PHP dependencies
+RUN composer install --optimize-autoloader --no-dev --no-interaction
 
-# Copy rest of the application
-COPY . .
-RUN composer dump-autoload --optimize
+# Install JS dependencies and build assets
+RUN npm ci && npm run build
 
 # Production stage
 FROM php:8.2-apache as production
@@ -72,6 +65,7 @@ COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 # Set environment variables
 ENV APP_ENV=production
 ENV APP_DEBUG=false
+ENV ASSET_URL=""
 
 # Expose port
 EXPOSE 80

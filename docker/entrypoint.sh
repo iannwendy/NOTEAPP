@@ -29,10 +29,16 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Verify Vite manifest exists
+if [ ! -f public/build/manifest.json ]; then
+    echo "WARNING: Vite manifest not found. Assets might not be built correctly."
+fi
+
 # Fix permissions
 echo "Setting file permissions..."
 chown -R www-data:www-data /var/www/html/storage
 chown -R www-data:www-data /var/www/html/bootstrap/cache
+chown -R www-data:www-data /var/www/html/public/build
 
 # Execute the passed command
 echo "Starting application..."
