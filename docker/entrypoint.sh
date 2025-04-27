@@ -58,9 +58,24 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
+# Check for Vite manifest and copy it to the expected location if needed
+if [ ! -f public/build/manifest.json ] && [ -f public/build/.vite/manifest.json ]; then
+    echo "Copying Vite manifest from .vite directory to build directory..."
+    mkdir -p public/build
+    cp public/build/.vite/manifest.json public/build/manifest.json
+fi
+
 # Verify Vite manifest exists
 if [ ! -f public/build/manifest.json ]; then
     echo "WARNING: Vite manifest not found. Assets might not be built correctly."
+    # Try to build assets again if manifest is missing
+    echo "Attempting to rebuild assets..."
+    npm ci && npm run build
+    # Check if manifest was created in .vite directory and copy it
+    if [ -f public/build/.vite/manifest.json ]; then
+        echo "Copying Vite manifest from .vite directory to build directory..."
+        cp public/build/.vite/manifest.json public/build/manifest.json
+    fi
 fi
 
 # Fix permissions
