@@ -59,6 +59,9 @@
                                         <strong>{{ $message }}</strong>
                                     </span>
                                 @enderror
+                                <div id="passwordHelpBlock" class="form-text">
+                                    Password must be at least 8 characters long.
+                                </div>
                             </div>
                         </div>
 
@@ -105,6 +108,22 @@
             } else {
                 this.classList.remove('is-invalid');
                 emailInvalidFeedback.style.display = 'none';
+            }
+        });
+
+        // Password strength validation
+        const passwordInput = document.getElementById('password');
+        const passwordHelpBlock = document.getElementById('passwordHelpBlock');
+        
+        passwordInput.addEventListener('input', function() {
+            if (this.value.length > 0 && this.value.length < 8) {
+                this.classList.add('is-invalid');
+                passwordHelpBlock.classList.add('text-danger');
+                passwordHelpBlock.textContent = 'Password too weak! Must be at least 8 characters long.';
+            } else {
+                this.classList.remove('is-invalid');
+                passwordHelpBlock.classList.remove('text-danger');
+                passwordHelpBlock.textContent = 'Password must be at least 8 characters long.';
             }
         });
 
