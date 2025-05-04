@@ -257,7 +257,7 @@
                     console.log('Labels loaded:', data.labels);
                     
                     // Additional validation - Ensure labels belong to the current user
-                    const currentUserId = {{ Auth::id() }};
+                    const currentUserId = {{ auth()->id() }};
                     
                     // Check if any labels have a different user_id
                     const invalidLabels = data.labels.filter(label => label.user_id !== currentUserId);
