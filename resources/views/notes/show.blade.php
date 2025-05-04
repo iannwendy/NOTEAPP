@@ -246,10 +246,23 @@
                     'Expires': '0'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    // Always show the labels list, even if empty
                     renderLabels(data.labels);
+                    
+                    // Show message if provided
+                    if (data.message) {
+                        labelsList.innerHTML = `<p class="text-info">${data.message}</p>`;
+                        labelsList.classList.remove('d-none');
+                        labelsLoading.classList.add('d-none');
+                    }
                 } else {
                     showError(data.message || 'Error loading labels');
                 }
@@ -272,55 +285,56 @@
         // Function to render labels list
         function renderLabels(labels) {
             if (!labels || labels.length === 0) {
-                labelsList.innerHTML = '<p>You haven\'t created any labels yet.</p>';
-            } else {
-                const currentNoteLabels = @json($note->labels->pluck('id'));
-                
-                // Sort labels by whether they are attached to the current note
-                labels.sort((a, b) => {
-                    const aIsAttached = currentNoteLabels.includes(a.id);
-                    const bIsAttached = currentNoteLabels.includes(b.id);
-                    
-                    if (aIsAttached && !bIsAttached) return -1;
-                    if (!aIsAttached && bIsAttached) return 1;
-                    return a.name.localeCompare(b.name);
-                });
-                
-                const labelsHtml = labels.map(label => {
-                    const isAttached = currentNoteLabels.includes(label.id);
-                    
-                    return `
-                        <div class="form-check d-flex justify-content-between align-items-center mb-2 p-2 ${isAttached ? 'bg-light rounded' : ''}">
-                            <div>
-                                <input class="form-check-input label-checkbox" type="checkbox" value="${label.id}" 
-                                    id="label-${label.id}" ${isAttached ? 'checked' : ''} 
-                                    data-label-id="${label.id}">
-                                <label class="form-check-label" for="label-${label.id}">
-                                    <span class="d-inline-block me-2" style="width: 1rem; height: 1rem; background-color: ${label.color}; border-radius: 50%; border: 1px solid #ccc;"></span>
-                                    ${label.name}
-                                </label>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                
-                labelsList.innerHTML = labelsHtml;
-                
-                // Attach event listeners to checkboxes
-                const checkboxes = labelsList.querySelectorAll('.label-checkbox');
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', function() {
-                        const labelId = this.getAttribute('data-label-id');
-                        const isChecked = this.checked;
-                        
-                        if (isChecked) {
-                            addLabelToNote(labelId, this);
-                        } else {
-                            removeLabelFromNote(labelId, this);
-                        }
-                    });
-                });
+                // This will be handled by the message in loadLabels
+                return;
             }
+            
+            const currentNoteLabels = @json($note->labels->pluck('id'));
+            
+            // Sort labels by whether they are attached to the current note
+            labels.sort((a, b) => {
+                const aIsAttached = currentNoteLabels.includes(a.id);
+                const bIsAttached = currentNoteLabels.includes(b.id);
+                
+                if (aIsAttached && !bIsAttached) return -1;
+                if (!aIsAttached && bIsAttached) return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            const labelsHtml = labels.map(label => {
+                const isAttached = currentNoteLabels.includes(label.id);
+                
+                return `
+                    <div class="form-check d-flex justify-content-between align-items-center mb-2 p-2 ${isAttached ? 'bg-light rounded' : ''}">
+                        <div>
+                            <input class="form-check-input label-checkbox" type="checkbox" value="${label.id}" 
+                                id="label-${label.id}" ${isAttached ? 'checked' : ''} 
+                                data-label-id="${label.id}">
+                            <label class="form-check-label" for="label-${label.id}">
+                                <span class="d-inline-block me-2" style="width: 1rem; height: 1rem; background-color: ${label.color}; border-radius: 50%; border: 1px solid #ccc;"></span>
+                                ${label.name}
+                            </label>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            labelsList.innerHTML = labelsHtml;
+            
+            // Attach event listeners to checkboxes
+            const checkboxes = labelsList.querySelectorAll('.label-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const labelId = this.getAttribute('data-label-id');
+                    const isChecked = this.checked;
+                    
+                    if (isChecked) {
+                        addLabelToNote(labelId, this);
+                    } else {
+                        removeLabelFromNote(labelId, this);
+                    }
+                });
+            });
             
             labelsList.classList.remove('d-none');
         }

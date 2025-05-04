@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Label;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -238,15 +239,17 @@ class LabelController extends Controller
                        ->orderBy('name')
                        ->get();
         
-        \Log::debug('Labels loaded for user', [
+        Log::debug('Labels loaded for user', [
             'user_id' => $userId,
             'count' => $labels->count(),
             'labels' => $labels->pluck('name', 'id')->toArray()
         ]);
         
+        // Return success even if no labels found
         return response()->json([
             'success' => true,
-            'labels' => $labels
+            'labels' => $labels,
+            'message' => $labels->count() > 0 ? null : 'No labels found. Create your first label!'
         ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
           ->header('Pragma', 'no-cache')
           ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');

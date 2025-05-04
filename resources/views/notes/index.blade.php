@@ -309,10 +309,23 @@ use Illuminate\Support\Str;
                     'Expires': '0'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
+                    // Always show the labels list, even if empty
                     renderLabels(data.labels);
+                    
+                    // Show message if provided
+                    if (data.message) {
+                        labelsList.innerHTML = `<p class="text-info">${data.message}</p>`;
+                        labelsList.classList.remove('d-none');
+                        labelsLoading.classList.add('d-none');
+                    }
                 } else {
                     showError(data.message || 'Error loading labels');
                 }
@@ -338,83 +351,84 @@ use Illuminate\Support\Str;
             if (!labelsList) return;
             
             if (!labels || labels.length === 0) {
-                labelsList.innerHTML = '<p>You haven\'t created any labels yet.</p>';
-            } else {
-                // Show loading indicator
-                labelsLoading.classList.remove('d-none');
-                labelsList.classList.add('d-none');
-                
-                // Fetch the current note's labels
-                fetch(`/notes/${currentNoteId}?_labels=1`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Hide loading indicator
-                        labelsLoading.classList.add('d-none');
-                        
-                        if (data.success) {
-                            // Extract IDs as numbers to ensure consistent comparison
-                            const currentNoteLabels = data.labels.map(label => Number(label.id));
-                            console.log('Note labels:', currentNoteLabels); // Debug
-                            
-                            // Sort labels by whether they are attached to the current note
-                            labels.sort((a, b) => {
-                                const aIsAttached = currentNoteLabels.includes(Number(a.id));
-                                const bIsAttached = currentNoteLabels.includes(Number(b.id));
-                                
-                                if (aIsAttached && !bIsAttached) return -1;
-                                if (!aIsAttached && bIsAttached) return 1;
-                                return a.name.localeCompare(b.name);
-                            });
-                            
-                            const labelsHtml = labels.map(label => {
-                                const labelId = Number(label.id);
-                                const isAttached = currentNoteLabels.includes(labelId);
-                                console.log(`Label ${labelId} (${label.name}) attached: ${isAttached}`); // Debug
-                                
-                                return `
-                                    <div class="custom-label-check p-2 ${isAttached ? 'bg-light rounded' : ''}">
-                                        <span class="form-check-input-container">
-                                            <input class="form-check-input" type="checkbox" value="${labelId}" 
-                                                id="label-${labelId}" ${isAttached ? 'checked' : ''} 
-                                                data-label-id="${labelId}">
-                                        </span>
-                                        <label class="form-check-label" for="label-${labelId}">
-                                            <span class="d-inline-block me-2" style="width: 1rem; height: 1rem; background-color: ${label.color}; border-radius: 50%; border: 1px solid #ccc;"></span>
-                                            ${label.name}
-                                        </label>
-                                    </div>
-                                `;
-                            }).join('');
-                            
-                            labelsList.innerHTML = labelsHtml;
-                            
-                            // Attach event listeners to checkboxes
-                            const checkboxes = labelsList.querySelectorAll('.form-check-input');
-                            checkboxes.forEach(checkbox => {
-                                checkbox.addEventListener('change', function() {
-                                    const labelId = this.getAttribute('data-label-id');
-                                    const isChecked = this.checked;
-                                    
-                                    if (isChecked) {
-                                        addLabelToNote(labelId, this);
-                                    } else {
-                                        removeLabelFromNote(labelId, this);
-                                    }
-                                });
-                            });
-                            
-                            labelsList.classList.remove('d-none');
-                        } else {
-                            showError('Error loading note labels');
-                        }
-                    })
-                    .catch(error => {
-                        // Hide loading indicator on error
-                        labelsLoading.classList.add('d-none');
-                        console.error('Error fetching note labels:', error);
-                        showError('Failed to load note labels');
-                    });
+                // This will be handled by the message in loadLabels
+                return;
             }
+            
+            // Show loading indicator
+            labelsLoading.classList.remove('d-none');
+            labelsList.classList.add('d-none');
+            
+            // Fetch the current note's labels
+            fetch(`/notes/${currentNoteId}?_labels=1`)
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    labelsLoading.classList.add('d-none');
+                    
+                    if (data.success) {
+                        // Extract IDs as numbers to ensure consistent comparison
+                        const currentNoteLabels = data.labels.map(label => Number(label.id));
+                        console.log('Note labels:', currentNoteLabels); // Debug
+                        
+                        // Sort labels by whether they are attached to the current note
+                        labels.sort((a, b) => {
+                            const aIsAttached = currentNoteLabels.includes(Number(a.id));
+                            const bIsAttached = currentNoteLabels.includes(Number(b.id));
+                            
+                            if (aIsAttached && !bIsAttached) return -1;
+                            if (!aIsAttached && bIsAttached) return 1;
+                            return a.name.localeCompare(b.name);
+                        });
+                        
+                        const labelsHtml = labels.map(label => {
+                            const labelId = Number(label.id);
+                            const isAttached = currentNoteLabels.includes(labelId);
+                            console.log(`Label ${labelId} (${label.name}) attached: ${isAttached}`); // Debug
+                            
+                            return `
+                                <div class="custom-label-check p-2 ${isAttached ? 'bg-light rounded' : ''}">
+                                    <span class="form-check-input-container">
+                                        <input class="form-check-input" type="checkbox" value="${labelId}" 
+                                            id="label-${labelId}" ${isAttached ? 'checked' : ''} 
+                                            data-label-id="${labelId}">
+                                    </span>
+                                    <label class="form-check-label" for="label-${labelId}">
+                                        <span class="d-inline-block me-2" style="width: 1rem; height: 1rem; background-color: ${label.color}; border-radius: 50%; border: 1px solid #ccc;"></span>
+                                        ${label.name}
+                                    </label>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        labelsList.innerHTML = labelsHtml;
+                        
+                        // Attach event listeners to checkboxes
+                        const checkboxes = labelsList.querySelectorAll('.form-check-input');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.addEventListener('change', function() {
+                                const labelId = this.getAttribute('data-label-id');
+                                const isChecked = this.checked;
+                                
+                                if (isChecked) {
+                                    addLabelToNote(labelId, this);
+                                } else {
+                                    removeLabelFromNote(labelId, this);
+                                }
+                            });
+                        });
+                        
+                        labelsList.classList.remove('d-none');
+                    } else {
+                        showError('Error loading note labels');
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator on error
+                    labelsLoading.classList.add('d-none');
+                    console.error('Error fetching note labels:', error);
+                    showError('Failed to load note labels');
+                });
         }
         
         // Function to add a label to the note
