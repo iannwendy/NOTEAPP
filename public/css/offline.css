@@ -17,7 +17,7 @@
 
 /* Offline page container */
 .offline-page .container {
-    max-width: 600px;
+    max-width: 800px;
     width: 90%;
     margin: 2rem auto;
     padding: 2rem;
@@ -68,24 +68,107 @@
     background-color: #3a7bc8;
 }
 
+/* View toggle controls */
+.offline-page .view-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.offline-page .view-toggle {
+    display: flex;
+}
+
+.offline-page .view-toggle button {
+    background-color: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #495057;
+    padding: 0.375rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.offline-page .view-toggle button:first-child {
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.offline-page .view-toggle button:last-child {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.offline-page .view-toggle button.active {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
 /* Notes container styling */
 .offline-page .notes-container {
     margin-top: 2rem;
     text-align: left;
     width: 100%;
-    max-height: 40vh;
+    max-height: 50vh;
     overflow-y: auto;
 }
 
+/* Grid View Styling */
+.offline-page .grid-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.offline-page .grid-view .note-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.offline-page .grid-view .note-content {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    max-height: 125px;
+}
+
+/* List View Styling */
+.offline-page .list-view .note-card {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem;
+}
+
+.offline-page .list-view .note-content-wrapper {
+    flex: 1;
+    min-width: 0; /* Critical for text truncation */
+    max-width: calc(100% - 260px); /* Reserve space for buttons */
+}
+
+.offline-page .list-view .note-buttons {
+    width: auto;
+    min-width: 250px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Common Note Card Styling */
 .offline-page .note-card {
     background-color: #fff9c4;
     padding: 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    overflow: hidden; /* Prevent content overflow */
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
 }
 
 .offline-page .note-title {
@@ -146,6 +229,11 @@
 
 .offline-page .labels-button {
     background-color: #28a745;
+    color: white;
+}
+
+.offline-page .pin-button {
+    background-color: #6c757d;
     color: white;
 }
 
@@ -267,7 +355,7 @@
 /* Responsive design improvements - only for offline page */
 @media (max-width: 768px) {
     .offline-page .container {
-        width: 85%;
+        width: 95%;
         padding: 1.5rem;
         margin: 1rem auto;
     }
@@ -287,12 +375,25 @@
         height: 80px;
     }
     
-    .offline-page .notes-container {
-        max-height: 50vh;
+    .offline-page .grid-view {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
     
-    .offline-page .note-buttons {
-        flex-direction: row;
+    .offline-page .list-view .note-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .offline-page .list-view .note-content-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .offline-page .list-view .note-buttons {
+        width: 100%;
+        min-width: 100%;
+        text-align: left;
         justify-content: flex-start;
     }
 }
@@ -300,7 +401,7 @@
 /* Smaller devices */
 @media (max-width: 576px) {
     .offline-page .container {
-        width: 90%;
+        width: 95%;
         padding: 1rem;
     }
     
@@ -312,8 +413,8 @@
         padding: 0.75rem;
     }
     
-    .offline-page .notes-container {
-        max-height: 60vh;
+    .offline-page .grid-view {
+        grid-template-columns: 1fr;
     }
     
     .offline-page .note-buttons {
@@ -370,6 +471,16 @@
         color: #f8d7da;
         border-color: #883e43;
     }
+    
+    .offline-page .view-controls {
+        background-color: #343a40;
+    }
+    
+    .offline-page .view-toggle button {
+        background-color: #495057;
+        border-color: #6c757d;
+        color: #f8f9fa;
+    }
 }
 
 /* Compatibility with existing dark theme class */
@@ -413,4 +524,19 @@ body.dark-theme .offline-page .error-message {
     background-color: #742029;
     color: #f8d7da;
     border-color: #883e43;
+}
+
+body.dark-theme .offline-page .view-controls {
+    background-color: #343a40;
+}
+
+body.dark-theme .offline-page .view-toggle button {
+    background-color: #495057;
+    border-color: #6c757d;
+    color: #f8f9fa;
+}
+
+body.dark-theme .offline-page .view-toggle button.active {
+    background-color: #4a90e2;
+    color: white;
 } 

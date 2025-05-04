@@ -29,8 +29,26 @@
             </ul>
         </div>
         
+        <!-- View Controls -->
+        <div class="view-controls">
+            <div>
+                <h4 style="margin: 0;">Các ghi chú đã lưu offline</h4>
+            </div>
+            <div class="view-toggle">
+                <button id="grid-view-btn" class="active">Grid</button>
+                <button id="list-view-btn">List</button>
+            </div>
+        </div>
+        
         <div class="notes-container" id="offline-notes">
-            <!-- Các ghi chú sẽ được hiển thị ở đây bằng JavaScript -->
+            <div id="grid-view" class="grid-view">
+                <!-- Grid view notes will be added here -->
+            </div>
+            
+            <div id="list-view" class="list-view" style="display:none;">
+                <!-- List view notes will be added here -->
+            </div>
+            
             <p id="no-notes" style="text-align: center; display: none;">Không có ghi chú nào được lưu trong bộ nhớ cục bộ.</p>
         </div>
     </div>
@@ -38,9 +56,27 @@
     <script>
         // Khi trang tải xong, hiển thị các ghi chú đã được lưu trong IndexedDB
         document.addEventListener('DOMContentLoaded', () => {
-            const notesContainer = document.getElementById('offline-notes');
+            const gridView = document.getElementById('grid-view');
+            const listView = document.getElementById('list-view');
+            const gridViewBtn = document.getElementById('grid-view-btn');
+            const listViewBtn = document.getElementById('list-view-btn');
             const noNotesMessage = document.getElementById('no-notes');
             const errorMessage = document.getElementById('error-message');
+            
+            // Chuyển đổi giữa chế độ xem Grid và List
+            gridViewBtn.addEventListener('click', () => {
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+            });
+            
+            listViewBtn.addEventListener('click', () => {
+                gridView.style.display = 'none';
+                listView.style.display = 'block';
+                listViewBtn.classList.add('active');
+                gridViewBtn.classList.remove('active');
+            });
             
             // Kiểm tra hỗ trợ IndexedDB
             if (!window.indexedDB) {
@@ -105,63 +141,8 @@
                                     return new Date(b.updated_at) - new Date(a.updated_at);
                                 });
                                 
-                                notes.forEach(note => {
-                                    const noteCard = document.createElement('div');
-                                    noteCard.className = 'note-card';
-                                    noteCard.style.backgroundColor = note.color || '#fff9c4';
-                                    
-                                    const title = document.createElement('div');
-                                    title.className = 'note-title';
-                                    title.textContent = note.title || 'Không có tiêu đề';
-                                    
-                                    const content = document.createElement('div');
-                                    content.className = 'note-content';
-                                    // Giới hạn nội dung hiển thị để tránh quá dài
-                                    content.textContent = note.content 
-                                        ? (note.content.length > 150 
-                                            ? note.content.substring(0, 150) + '...' 
-                                            : note.content)
-                                        : 'Không có nội dung';
-                                    
-                                    // Tạo container cho các nút
-                                    const buttonsContainer = document.createElement('div');
-                                    buttonsContainer.className = 'note-buttons';
-                                    
-                                    // Nút Xem
-                                    const viewButton = document.createElement('button');
-                                    viewButton.className = 'note-button view-button';
-                                    viewButton.textContent = 'Xem';
-                                    viewButton.disabled = true; // Vô hiệu hóa trong chế độ offline
-                                    
-                                    // Nút Chỉnh sửa
-                                    const editButton = document.createElement('button');
-                                    editButton.className = 'note-button edit-button';
-                                    editButton.textContent = 'Chỉnh sửa';
-                                    editButton.disabled = true; // Vô hiệu hóa trong chế độ offline
-                                    
-                                    // Nút Nhãn
-                                    const labelsButton = document.createElement('button');
-                                    labelsButton.className = 'note-button labels-button';
-                                    labelsButton.textContent = 'Nhãn';
-                                    labelsButton.disabled = true; // Vô hiệu hóa trong chế độ offline
-                                    
-                                    // Nút Xóa
-                                    const deleteButton = document.createElement('button');
-                                    deleteButton.className = 'note-button delete-button';
-                                    deleteButton.textContent = 'Xóa';
-                                    deleteButton.disabled = true; // Vô hiệu hóa trong chế độ offline
-                                    
-                                    // Thêm các nút vào container
-                                    buttonsContainer.appendChild(viewButton);
-                                    buttonsContainer.appendChild(editButton);
-                                    buttonsContainer.appendChild(labelsButton);
-                                    buttonsContainer.appendChild(deleteButton);
-                                    
-                                    noteCard.appendChild(title);
-                                    noteCard.appendChild(content);
-                                    noteCard.appendChild(buttonsContainer);
-                                    notesContainer.appendChild(noteCard);
-                                });
+                                // Hiển thị ghi chú trong cả hai chế độ xem
+                                displayNotes(notes);
                             } else {
                                 noNotesMessage.style.display = 'block';
                             }
@@ -173,6 +154,125 @@
                     errorMessage.style.display = 'block';
                 }
             };
+            
+            // Hiển thị ghi chú trong cả Grid View và List View
+            function displayNotes(notes) {
+                notes.forEach(note => {
+                    // Tạo Grid View Note
+                    const gridNoteCard = createGridNoteCard(note);
+                    gridView.appendChild(gridNoteCard);
+                    
+                    // Tạo List View Note
+                    const listNoteCard = createListNoteCard(note);
+                    listView.appendChild(listNoteCard);
+                });
+            }
+            
+            // Tạo card cho Grid View
+            function createGridNoteCard(note) {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.style.backgroundColor = note.color || '#fff9c4';
+                
+                const title = document.createElement('div');
+                title.className = 'note-title';
+                title.textContent = note.title || 'Không có tiêu đề';
+                
+                const content = document.createElement('div');
+                content.className = 'note-content';
+                content.textContent = note.content 
+                    ? (note.content.length > 150 
+                        ? note.content.substring(0, 150) + '...' 
+                        : note.content)
+                    : 'Không có nội dung';
+                
+                // Tạo container cho các nút
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'note-buttons';
+                
+                // Thêm các nút tương tác
+                const buttons = createNoteButtons();
+                buttons.forEach(button => buttonsContainer.appendChild(button));
+                
+                noteCard.appendChild(title);
+                noteCard.appendChild(content);
+                noteCard.appendChild(buttonsContainer);
+                
+                return noteCard;
+            }
+            
+            // Tạo card cho List View
+            function createListNoteCard(note) {
+                const noteCard = document.createElement('div');
+                noteCard.className = 'note-card';
+                noteCard.style.backgroundColor = note.color || '#fff9c4';
+                
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'note-content-wrapper';
+                
+                const title = document.createElement('div');
+                title.className = 'note-title';
+                title.textContent = note.title || 'Không có tiêu đề';
+                
+                const content = document.createElement('div');
+                content.className = 'note-content';
+                content.textContent = note.content 
+                    ? (note.content.length > 150 
+                        ? note.content.substring(0, 150) + '...' 
+                        : note.content)
+                    : 'Không có nội dung';
+                
+                contentWrapper.appendChild(title);
+                contentWrapper.appendChild(content);
+                
+                // Tạo container cho các nút
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'note-buttons';
+                
+                // Thêm các nút tương tác
+                const buttons = createNoteButtons();
+                buttons.forEach(button => buttonsContainer.appendChild(button));
+                
+                noteCard.appendChild(contentWrapper);
+                noteCard.appendChild(buttonsContainer);
+                
+                return noteCard;
+            }
+            
+            // Tạo các nút cho ghi chú
+            function createNoteButtons() {
+                // Nút Pin
+                const pinButton = document.createElement('button');
+                pinButton.className = 'note-button pin-button';
+                pinButton.textContent = 'Pin';
+                pinButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                
+                // Nút Xem
+                const viewButton = document.createElement('button');
+                viewButton.className = 'note-button view-button';
+                viewButton.textContent = 'Xem';
+                viewButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                
+                // Nút Chỉnh sửa
+                const editButton = document.createElement('button');
+                editButton.className = 'note-button edit-button';
+                editButton.textContent = 'Chỉnh sửa';
+                editButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                
+                // Nút Nhãn
+                const labelsButton = document.createElement('button');
+                labelsButton.className = 'note-button labels-button';
+                labelsButton.textContent = 'Nhãn';
+                labelsButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                
+                // Nút Xóa
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'note-button delete-button';
+                deleteButton.textContent = 'Xóa';
+                deleteButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                
+                return [pinButton, viewButton, editButton, labelsButton, deleteButton];
+            }
             
             // Button thử lại
             document.getElementById('try-again').addEventListener('click', (e) => {
