@@ -546,8 +546,9 @@ body.dark-theme .offline-page .view-toggle button.active {
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: hidden !important;
     margin-bottom: 1rem;
+    max-width: 100%;
 }
 
 .offline-page .note-view-header {
@@ -557,23 +558,34 @@ body.dark-theme .offline-page .view-toggle button.active {
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 8px;
+    overflow: hidden;
 }
 
 .offline-page .note-view-title {
     font-size: 1.2rem;
     font-weight: bold;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 10px);
 }
 
 .offline-page .note-view-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
+    margin-top: 5px;
 }
 
 .offline-page .note-view-content {
     padding: 1rem;
     white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .offline-page .note-view-footer {
@@ -582,6 +594,41 @@ body.dark-theme .offline-page .view-toggle button.active {
     border-top: 1px solid rgba(0, 0, 0, 0.125);
     font-size: 0.875rem;
     color: #6c757d;
+}
+
+/* Force button sizing for consistency */
+.offline-page .note-button {
+    min-width: 60px;
+    margin: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Grid & List View specific fixes */
+.offline-page .grid-view .note-card,
+.offline-page .list-view .note-card {
+    overflow: hidden !important;
+}
+
+.offline-page .grid-view .note-title,
+.offline-page .list-view .note-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.offline-page .list-view .note-card {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 100%;
+}
+
+.offline-page .list-view .note-content-wrapper {
+    overflow: hidden;
+    min-width: 0;
 }
 
 /* Dark theme support for note view */
@@ -624,8 +671,24 @@ body.dark-theme .offline-page .note-view-footer {
         align-items: flex-start;
     }
     
+    .offline-page .note-view-title {
+        max-width: 100%;
+        margin-bottom: 8px;
+    }
+    
     .offline-page .note-view-buttons {
         margin-top: 10px;
         width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .offline-page .list-view .note-card {
+        flex-direction: column;
+    }
+    
+    .offline-page .list-view .note-content-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
     }
 } 

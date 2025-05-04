@@ -742,6 +742,14 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
 .note-card .card-header .d-flex {
     flex-wrap: wrap;
     gap: 8px;
+    max-width: 100%;
+}
+
+.note-card .card-header .d-flex span {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 250px;
 }
 
 .note-card .card-header .btn {
@@ -763,6 +771,15 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
         align-items: flex-start !important;
     }
     
+    .note-card .card-header .d-flex span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+        width: 100%;
+    }
+    
     .note-card .card-header > div:last-child {
         margin-top: 10px;
         width: 100%;
@@ -771,4 +788,27 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
     .note-card .card-header .btn {
         margin-bottom: 5px;
     }
+}
+
+/* Additional fixes for list and grid view in all sizes */
+.note-card {
+    overflow: hidden !important;
+}
+
+#grid-view .card-title, 
+#list-view .note-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+#list-view .list-group-item.note-card {
+    overflow: hidden !important;
+    max-width: 100%;
+}
+
+/* Fixed width buttons for consistency */
+.btn-sm {
+    min-width: 60px;
 } 
