@@ -184,19 +184,57 @@ class LabelController extends Controller
             ], 422);
         }
         
-        $note = Auth::user()->notes()->findOrFail($request->note_id);
-        $label = Auth::user()->labels()->findOrFail($request->label_id);
-        
-        // Check if the label is already attached to the note
-        if (!$note->labels()->where('label_id', $label->id)->exists()) {
-            $note->labels()->attach($label);
+        try {
+            // Get the note and ensure it belongs to the authenticated user
+            $note = Auth::user()->notes()->findOrFail($request->note_id);
+            
+            // Get the label and ensure it belongs to the authenticated user
+            $label = Auth::user()->labels()->findOrFail($request->label_id);
+            
+            // Log the action for debugging
+            Log::debug('Adding label to note', [
+                'user_id' => Auth::id(),
+                'note_id' => $note->id,
+                'note_user_id' => $note->user_id,
+                'label_id' => $label->id,
+                'label_user_id' => $label->user_id
+            ]);
+            
+            // Check if the label is already attached to the note
+            if (!$note->labels()->where('label_id', $label->id)->exists()) {
+                $note->labels()->attach($label);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Label \"{$label->name}\" added to note",
+                'label' => $label
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Label or note not found for user during addToNote', [
+                'user_id' => Auth::id(),
+                'note_id' => $request->note_id,
+                'label_id' => $request->label_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Note or label not found or does not belong to you'
+            ], 403);
+        } catch (\Exception $e) {
+            Log::error('Error adding label to note', [
+                'user_id' => Auth::id(),
+                'note_id' => $request->note_id,
+                'label_id' => $request->label_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while adding the label'
+            ], 500);
         }
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Label \"{$label->name}\" added to note",
-            'label' => $label
-        ]);
     }
     
     /**
@@ -216,15 +254,51 @@ class LabelController extends Controller
             ], 422);
         }
         
-        $note = Auth::user()->notes()->findOrFail($request->note_id);
-        $label = Auth::user()->labels()->findOrFail($request->label_id);
-        
-        $note->labels()->detach($label);
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Label \"{$label->name}\" removed from note"
-        ]);
+        try {
+            // Get the note and ensure it belongs to the authenticated user
+            $note = Auth::user()->notes()->findOrFail($request->note_id);
+            
+            // Get the label and ensure it belongs to the authenticated user
+            $label = Auth::user()->labels()->findOrFail($request->label_id);
+            
+            // Log the action for debugging
+            Log::debug('Removing label from note', [
+                'user_id' => Auth::id(),
+                'note_id' => $note->id,
+                'label_id' => $label->id
+            ]);
+            
+            $note->labels()->detach($label);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Label \"{$label->name}\" removed from note"
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Label or note not found for user during removeFromNote', [
+                'user_id' => Auth::id(),
+                'note_id' => $request->note_id,
+                'label_id' => $request->label_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Note or label not found or does not belong to you'
+            ], 403);
+        } catch (\Exception $e) {
+            Log::error('Error removing label from note', [
+                'user_id' => Auth::id(),
+                'note_id' => $request->note_id,
+                'label_id' => $request->label_id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while removing the label'
+            ], 500);
+        }
     }
     
     /**
@@ -232,12 +306,54 @@ class LabelController extends Controller
      */
     public function getAllLabels()
     {
+        // Ensure user is authenticated
+        if (!Auth::check()) {
+            Log::error('Unauthenticated user attempting to access labels');
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+        
         $userId = Auth::id();
         
+        // Log the current authenticated user
+        Log::debug('Label getAllLabels requested by user', [
+            'auth_user_id' => $userId,
+            'auth_user_email' => Auth::user()->email
+        ]);
+        
         // Explicitly query by user_id to ensure proper user scope
-        $labels = Label::where('user_id', $userId)
-                       ->orderBy('name')
-                       ->get();
+        // Use Auth::user()->labels() relationship to guarantee correct user scope
+        $labels = Auth::user()->labels()
+                              ->orderBy('name')
+                              ->get();
+        
+        // Double-check that all returned labels belong to the current user
+        $nonUserLabels = $labels->filter(function ($label) use ($userId) {
+            return $label->user_id !== $userId;
+        });
+        
+        if ($nonUserLabels->count() > 0) {
+            Log::error('Security issue: Label query returned labels from other users', [
+                'auth_user_id' => $userId,
+                'non_user_labels' => $nonUserLabels->pluck('id', 'user_id')->toArray()
+            ]);
+            
+            // Filter out non-user labels for safety
+            $labels = $labels->filter(function ($label) use ($userId) {
+                return $label->user_id === $userId;
+            });
+        }
+        
+        // Debug - log all labels in the system to check for data isolation issues
+        $allLabels = Label::all();
+        Log::debug('All labels in system:', [
+            'count' => $allLabels->count(),
+            'by_user' => $allLabels->groupBy('user_id')->map(function ($items) {
+                return $items->count();
+            })->toArray()
+        ]);
         
         Log::debug('Labels loaded for user', [
             'user_id' => $userId,

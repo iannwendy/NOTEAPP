@@ -317,6 +317,19 @@ use Illuminate\Support\Str;
             })
             .then(data => {
                 if (data.success) {
+                    console.log('Labels loaded:', data.labels);
+                    
+                    // Additional validation - Ensure labels belong to the current user
+                    const currentUserId = {{ Auth::id() }};
+                    
+                    // Check if any labels have a different user_id
+                    const invalidLabels = data.labels.filter(label => label.user_id !== currentUserId);
+                    if (invalidLabels.length > 0) {
+                        console.error('Security issue: Found labels from other users', invalidLabels);
+                        showError('Security issue detected. Please contact support.');
+                        return;
+                    }
+                    
                     // Always show the labels list, even if empty
                     renderLabels(data.labels);
                     
