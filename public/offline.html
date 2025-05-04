@@ -123,8 +123,43 @@
                                             : note.content)
                                         : 'Không có nội dung';
                                     
+                                    // Tạo container cho các nút
+                                    const buttonsContainer = document.createElement('div');
+                                    buttonsContainer.className = 'note-buttons';
+                                    
+                                    // Nút Xem
+                                    const viewButton = document.createElement('button');
+                                    viewButton.className = 'note-button view-button';
+                                    viewButton.textContent = 'Xem';
+                                    viewButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                                    
+                                    // Nút Chỉnh sửa
+                                    const editButton = document.createElement('button');
+                                    editButton.className = 'note-button edit-button';
+                                    editButton.textContent = 'Chỉnh sửa';
+                                    editButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                                    
+                                    // Nút Nhãn
+                                    const labelsButton = document.createElement('button');
+                                    labelsButton.className = 'note-button labels-button';
+                                    labelsButton.textContent = 'Nhãn';
+                                    labelsButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                                    
+                                    // Nút Xóa
+                                    const deleteButton = document.createElement('button');
+                                    deleteButton.className = 'note-button delete-button';
+                                    deleteButton.textContent = 'Xóa';
+                                    deleteButton.disabled = true; // Vô hiệu hóa trong chế độ offline
+                                    
+                                    // Thêm các nút vào container
+                                    buttonsContainer.appendChild(viewButton);
+                                    buttonsContainer.appendChild(editButton);
+                                    buttonsContainer.appendChild(labelsButton);
+                                    buttonsContainer.appendChild(deleteButton);
+                                    
                                     noteCard.appendChild(title);
                                     noteCard.appendChild(content);
+                                    noteCard.appendChild(buttonsContainer);
                                     notesContainer.appendChild(noteCard);
                                 });
                             } else {

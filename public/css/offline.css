@@ -83,16 +83,70 @@
     border-radius: 4px;
     margin-bottom: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden; /* Prevent content overflow */
+    display: flex;
+    flex-direction: column;
 }
 
 .offline-page .note-title {
     font-weight: bold;
     margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .offline-page .note-content {
     color: #555;
     font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    max-height: 4.5em; /* Approximately 3 lines */
+}
+
+/* Button container for notes */
+.offline-page .note-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.offline-page .note-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    font-weight: 400;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.offline-page .view-button {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.offline-page .edit-button {
+    background-color: #ffc107;
+    color: black;
+}
+
+.offline-page .delete-button {
+    background-color: #dc3545;
+    color: white;
+}
+
+.offline-page .labels-button {
+    background-color: #28a745;
+    color: white;
 }
 
 /* Error message styling */
@@ -232,6 +286,15 @@
         width: 80px;
         height: 80px;
     }
+    
+    .offline-page .notes-container {
+        max-height: 50vh;
+    }
+    
+    .offline-page .note-buttons {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
 }
 
 /* Smaller devices */
@@ -250,7 +313,17 @@
     }
     
     .offline-page .notes-container {
-        max-height: 30vh;
+        max-height: 60vh;
+    }
+    
+    .offline-page .note-buttons {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    
+    .offline-page .note-button {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.8rem;
     }
 }
 
