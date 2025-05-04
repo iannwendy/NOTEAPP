@@ -30,6 +30,11 @@ class NoteController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
         
+        // Trả về JSON nếu được yêu cầu (cho PWA/offline mode)
+        if ($request->ajax() || $request->wantsJson() || $request->has('format') && $request->format === 'json') {
+            return response()->json($notes);
+        }
+        
         // Get all labels for the filter dropdown
         $labels = Auth::user()->labels()->orderBy('name')->get();
         $selectedLabel = $request->has('label_id') ? (int)$request->label_id : null;
@@ -491,113 +496,34 @@ class NoteController extends Controller
                                     $note->getPermissionForUser(Auth::id()) === 'edit';
         
         if (!$isOwner && !$isSharedWithEditPermission) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized action.'
-            ], 403);
+            return response()->json(['error' => 'Unauthorized action.'], 403);
         }
 
         try {
-            // Validate and determine what's being updated
             $validated = $request->validate([
-                'title' => 'nullable|string|max:255',
-                'content' => 'nullable|string',
-                'cursor_position' => 'nullable|integer',
-                'selection_start' => 'nullable|integer',
-                'selection_end' => 'nullable|integer',
-                '_broadcast_only' => 'nullable|string',
+                'title' => 'required|max:255',
+                'content' => 'required',
+                'color' => 'nullable|string|max:20',
             ]);
+
+            $note->update($validated);
             
-            // Check if this note is shared with other users - only then should we consider broadcasting
-            $noteIsShared = $note->shares()->exists();
-            
-            // Only enable broadcast mode if the note is actually shared
-            $broadcastOnly = $noteIsShared && $request->has('_broadcast_only');
-            
-            // Log the request data for debugging
-            Log::debug('Real-time update request', [
-                'user_id' => Auth::id(),
-                'note_id' => $note->id,
-                'socket_id' => $request->header('X-Socket-ID'),
-                'broadcast_requested' => $request->has('_broadcast_only'),
-                'broadcast_enabled' => $broadcastOnly,
-                'note_is_shared' => $noteIsShared,
-                'has_title' => $request->has('title'),
-                'has_content' => $request->has('content'),
-                'request_data' => $request->all()
-            ]);
-            
-            // Handle title update
-            if ($request->has('title')) {
-                // Only save the note if we're not in broadcast-only mode
-                if (!$broadcastOnly) {
-                    $note->title = $request->title;
-                    $note->save();
-                }
-                
-                // Only broadcast if the note is shared with others
-                if ($noteIsShared) {
-                    // Broadcast the change to others - ensure the socketId is excluded
-                    event(new \App\Events\NoteTitleUpdated($note, Auth::user(), $request->title));
-                    
-                    // Log for debugging
-                    Log::debug('Broadcasting title update', [
-                        'note_id' => $note->id,
-                        'user_id' => Auth::id(),
-                        'socket_id' => $request->header('X-Socket-ID'),
-                        'broadcast_only' => $broadcastOnly
-                    ]);
-                }
+            // Log autosave
+            if ($request->has('_autosave')) {
+                Log::info('Auto-save update for note via real-time API: ' . $note->id);
             }
-            
-            // Handle content update
-            if ($request->has('content')) {
-                // Only save the note if we're not in broadcast-only mode
-                if (!$broadcastOnly) {
-                    $note->content = $request->content;
-                    $note->save();
-                }
-                
-                // Only broadcast if the note is shared with others
-                if ($noteIsShared) {
-                    // Broadcast the change to others - ensure the socketId is excluded
-                    event(new \App\Events\NoteContentUpdated($note, Auth::user(), $request->content));
-                    
-                    // Log for debugging
-                    Log::debug('Broadcasting content update', [
-                        'note_id' => $note->id,
-                        'user_id' => Auth::id(),
-                        'socket_id' => $request->header('X-Socket-ID'),
-                        'broadcast_only' => $broadcastOnly,
-                        'content_length' => strlen($request->content)
-                    ]);
-                }
-            }
-            
-            // For non-shared notes, never mention broadcasting in the response
-            if (!$noteIsShared) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Note updated successfully',
-                    'broadcast_only' => false,
-                    'socket_id' => $request->header('X-Socket-ID')
-                ]);
-            }
-            
-            // For shared notes, include broadcasting details as appropriate
+
             return response()->json([
                 'success' => true,
-                'message' => $broadcastOnly ? 'Real-time update broadcast successfully' : 'Real-time update processed successfully',
-                'broadcast_only' => $broadcastOnly,
-                'socket_id' => $request->header('X-Socket-ID')
+                'message' => 'Note updated successfully',
+                'note' => $note
             ]);
-            
         } catch (\Exception $e) {
             Log::error('Error in real-time update: ' . $e->getMessage());
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process real-time update: ' . $e->getMessage()
+                'message' => 'Failed to update note: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -707,16 +633,16 @@ class NoteController extends Controller
     {
         // Ensure the note belongs to the authenticated user or is shared with them
         $isOwner = $note->user_id === Auth::id();
-        $isSharedWith = $note->isSharedWithUser(Auth::id());
+        $isShared = $note->isSharedWithUser(Auth::id());
         
-        if (!$isOwner && !$isSharedWith) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized.'
-            ], 403);
+        if (!$isOwner && !$isShared) {
+            abort(403, 'Unauthorized action.');
         }
         
-        // Return the note in JSON format
+        // Load labels
+        $note->load('labels');
+        
+        // Return JSON response
         return response()->json($note);
     }
 }

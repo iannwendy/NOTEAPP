@@ -1,0 +1,139 @@
+/* CSS cho trạng thái offline và thông báo */
+.offline-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  width: 320px;
+  max-width: 90%;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  transform: translateY(150%);
+  transition: transform 0.3s ease-out;
+}
+
+.offline-notification.visible {
+  transform: translateY(0);
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.notification-message {
+  font-size: 14px;
+  color: #666;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 0 0 10px;
+}
+
+.notification-close:hover {
+  color: #333;
+}
+
+/* Chỉ báo trạng thái offline */
+.offline-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background-color: #ff4a4a;
+  color: white;
+  border-radius: 50px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.offline-indicator.visible {
+  display: flex;
+}
+
+.offline-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: white;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Chỉ báo đồng bộ hóa */
+.sync-indicator {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 50px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sync-indicator.visible {
+  display: flex;
+}
+
+.sync-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Phần tử chỉ hiển thị khi offline */
+.offline-only {
+  display: none;
+}
+
+.is-offline .offline-only {
+  display: block;
+}
+
+/* Phần tử ẩn khi offline */
+.is-offline .online-only {
+  display: none;
+} 

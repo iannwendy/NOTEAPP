@@ -12,7 +12,26 @@ use Illuminate\Support\Facades\Route;
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- User ID Token for PWA -->
+    @auth
+    <meta name="user-id" content="{{ Auth::id() }}">
+    @endauth
+
     <title>{{ config('app.name', 'Laravel') }}</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Ứng dụng ghi chú với khả năng hoạt động ngoại tuyến">
+    <meta name="theme-color" content="#4a90e2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Notes App') }}">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="{{ asset('icons/icon-72x72.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('icons/icon-192x192.png') }}">
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -23,10 +42,17 @@ use Illuminate\Support\Facades\Route;
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}?v={{ time() }}">
 
+    <!-- Offline CSS -->
+    <link rel="stylesheet" href="{{ asset('css/offline.css') }}?v={{ time() }}">
+
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
 <body class="{{ auth()->check() && isset(auth()->user()->preferences['font_size']) ? auth()->user()->preferences['font_size'] . '-font' : 'medium-font' }} {{ auth()->check() && isset(auth()->user()->preferences['theme']) && auth()->user()->preferences['theme'] === 'dark' ? 'dark-theme' : '' }}">
+    <!-- Offline & Sync Indicators -->
+    <div id="offline-indicator" class="offline-indicator">Ngoại tuyến</div>
+    <div id="sync-indicator" class="sync-indicator">Đang đồng bộ...</div>
+
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">

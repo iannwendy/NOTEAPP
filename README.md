@@ -170,3 +170,64 @@ This project was created by Your Team Name. Contributions are welcome! Please fe
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Tính năng Hoạt động Ngoại tuyến (Offline)
+
+Ứng dụng Notes cung cấp khả năng hoạt động ngoại tuyến, cho phép người dùng tiếp tục xem và chỉnh sửa ghi chú ngay cả khi không có kết nối Internet. Tính năng này sử dụng Progressive Web App (PWA) và các công nghệ lưu trữ cục bộ.
+
+### Các tính năng chính
+
+1. **Truy cập ngoại tuyến**: Người dùng có thể truy cập các ghi chú đã được xem trước đó ngay cả khi không có kết nối mạng.
+2. **Tạo và chỉnh sửa ngoại tuyến**: Mọi thay đổi được thực hiện trong chế độ ngoại tuyến sẽ được lưu trữ cục bộ.
+3. **Đồng bộ hóa tự động**: Khi kết nối mạng được khôi phục, các thay đổi sẽ tự động đồng bộ hóa với máy chủ.
+4. **Thông báo trạng thái**: Hệ thống thông báo trực quan giúp người dùng biết khi nào họ đang làm việc ở chế độ ngoại tuyến và khi nào dữ liệu đang được đồng bộ hóa.
+
+### Cách hoạt động
+
+Ứng dụng sử dụng các công nghệ sau để hỗ trợ tính năng ngoại tuyến:
+
+- **Service Worker**: Cho phép ứng dụng chặn các yêu cầu mạng và phục vụ từ bộ nhớ cache.
+- **IndexedDB**: Một cơ sở dữ liệu cục bộ để lưu trữ ghi chú và các thao tác chưa đồng bộ.
+- **Background Sync API**: Cho phép đồng bộ hóa dữ liệu khi kết nối mạng được khôi phục.
+
+### Cài đặt các file biểu tượng
+
+Trước khi triển khai, bạn cần tạo các biểu tượng cho PWA. Bạn có thể sử dụng:
+
+1. Script `create-pwa-icons.sh` được cung cấp (yêu cầu công cụ ImageMagick):
+   ```bash
+   chmod +x create-pwa-icons.sh
+   ./create-pwa-icons.sh
+   ```
+
+2. Hoặc tạo thủ công các file PNG với kích thước tương ứng và đặt vào thư mục `public/icons/`.
+
+### Các file cần thiết
+
+Tính năng ngoại tuyến bao gồm các file sau:
+
+1. `public/sw.js`: Service Worker quản lý cache và luồng làm việc ngoại tuyến.
+2. `public/manifest.json`: File manifest của PWA.
+3. `public/offline.html`: Trang hiển thị khi người dùng ngoại tuyến nhưng truy cập vào nội dung không có trong cache.
+4. `resources/js/database.js`: Quản lý lưu trữ cục bộ với IndexedDB.
+5. `resources/js/sync.js`: Quản lý đồng bộ hóa giữa dữ liệu cục bộ và máy chủ.
+
+### Kiểm tra tính năng ngoại tuyến
+
+Để kiểm tra tính năng ngoại tuyến:
+
+1. Truy cập ứng dụng với một trình duyệt hiện đại (Chrome, Firefox, Edge).
+2. Duyệt qua một số ghi chú để chúng được lưu vào cache.
+3. Mở Developer Tools và chuyển sang tab "Network".
+4. Chọn "Offline" trong dropdown "No throttling".
+5. Làm mới trang - bạn vẫn có thể xem các ghi chú đã được cache.
+6. Thử chỉnh sửa một ghi chú - thay đổi sẽ được lưu cục bộ.
+7. Chuyển lại chế độ "Online" - các thay đổi sẽ tự động đồng bộ với máy chủ.
+
+### Giải quyết vấn đề
+
+Nếu bạn gặp sự cố với tính năng ngoại tuyến:
+
+1. **Service Worker không đăng ký**: Đảm bảo ứng dụng được phục vụ qua HTTPS hoặc từ localhost.
+2. **Dữ liệu không đồng bộ**: Kiểm tra console trong Developer Tools để xem các lỗi liên quan đến đồng bộ hóa.
+3. **IndexedDB không hoạt động**: Một số trình duyệt riêng tư có thể vô hiệu hóa IndexedDB. Hãy thử với chế độ duyệt web thông thường.
