@@ -1,10 +1,11 @@
-@php
-use Illuminate\Support\Str;
-@endphp
-
 @extends('layouts.app')
 
 @section('content')
+<script>
+    // Define user ID for JavaScript use
+    const APP_USER_ID = {{ auth()->id() }};
+</script>
+
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-10">
@@ -320,7 +321,7 @@ use Illuminate\Support\Str;
                     console.log('Labels loaded:', data.labels);
                     
                     // Additional validation - Ensure labels belong to the current user
-                    const currentUserId = {{ auth()->id() }};
+                    const currentUserId = APP_USER_ID;
                     
                     // Check if any labels have a different user_id
                     const invalidLabels = data.labels.filter(label => label.user_id !== currentUserId);
