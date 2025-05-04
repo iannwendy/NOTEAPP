@@ -298,22 +298,32 @@ use Illuminate\Support\Str;
             labelsError.classList.add('d-none');
             labelsList.classList.add('d-none');
             
-            fetch('{{ route('labels.get-all') }}')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        renderLabels(data.labels);
-                    } else {
-                        showError(data.message || 'Error loading labels');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching labels:', error);
-                    showError('Failed to load labels. Please try again.');
-                })
-                .finally(() => {
-                    labelsLoading.classList.add('d-none');
-                });
+            // Add timestamp to avoid caching
+            const timestamp = new Date().getTime();
+            const url = '{{ route('labels.get-all') }}?_=' + timestamp;
+            
+            fetch(url, {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderLabels(data.labels);
+                } else {
+                    showError(data.message || 'Error loading labels');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching labels:', error);
+                showError('Failed to load labels. Please try again.');
+            })
+            .finally(() => {
+                labelsLoading.classList.add('d-none');
+            });
         }
         
         // Function to show error message

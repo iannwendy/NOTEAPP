@@ -231,11 +231,24 @@ class LabelController extends Controller
      */
     public function getAllLabels()
     {
-        $labels = Auth::user()->labels()->orderBy('name')->get();
+        $userId = Auth::id();
+        
+        // Explicitly query by user_id to ensure proper user scope
+        $labels = Label::where('user_id', $userId)
+                       ->orderBy('name')
+                       ->get();
+        
+        \Log::debug('Labels loaded for user', [
+            'user_id' => $userId,
+            'count' => $labels->count(),
+            'labels' => $labels->pluck('name', 'id')->toArray()
+        ]);
         
         return response()->json([
             'success' => true,
             'labels' => $labels
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
     }
 }
