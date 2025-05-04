@@ -731,4 +731,44 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
     #list-view .list-group-item.note-card .btn {
         margin-bottom: 5px;
     }
+}
+
+/* Fix for note view page */
+.note-card .card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.note-card .card-header .d-flex {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.note-card .card-header .btn {
+    margin: 2px;
+    white-space: nowrap;
+}
+
+/* Ensure button container has proper spacing */
+.note-card .card-header > div:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+/* Improve responsive layout for note view page */
+@media (max-width: 767px) {
+    .note-card .card-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .note-card .card-header > div:last-child {
+        margin-top: 10px;
+        width: 100%;
+    }
+    
+    .note-card .card-header .btn {
+        margin-bottom: 5px;
+    }
 } 
