@@ -1,13 +1,22 @@
-const CACHE_NAME = 'notes-app-cache-v1';
+const CACHE_NAME = 'notes-app-cache-v2';
 const STATIC_ASSETS = [
   '/',
+  '/offline.html',
   '/css/app.css',
+  '/css/offline.css',
   '/js/app.js',
   '/js/manifest.js',
   '/js/vendor.js',
-  '/manifest.json',
   '/favicon.ico',
-  '/offline.html'
+  '/manifest.json',
+  '/icons/icon-72x72.png',
+  '/icons/icon-96x96.png',
+  '/icons/icon-128x128.png',
+  '/icons/icon-144x144.png',
+  '/icons/icon-152x152.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-384x384.png',
+  '/icons/icon-512x512.png'
 ];
 
 // Cài đặt Service Worker
@@ -17,6 +26,9 @@ self.addEventListener('install', (event) => {
       .then((cache) => {
         console.log('Opened cache');
         return cache.addAll(STATIC_ASSETS);
+      })
+      .catch(error => {
+        console.error('Failed to cache static assets:', error);
       })
   );
   self.skipWaiting();
@@ -42,12 +54,31 @@ self.addEventListener('activate', (event) => {
 const cacheFirstStrategy = (request) => {
   return caches.match(request)
     .then((cacheResponse) => {
-      return cacheResponse || fetch(request).then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, networkResponse.clone());
+      if (cacheResponse) {
+        return cacheResponse;
+      }
+      return fetch(request)
+        .then((networkResponse) => {
+          // Chỉ cache các response hợp lệ
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
           return networkResponse;
+        })
+        .catch(error => {
+          console.error('Fetch failed:', error);
+          // Nếu là request yêu cầu trang, trả về trang offline
+          if (request.mode === 'navigate') {
+            return caches.match('/offline.html');
+          }
+          return new Response('Network error happened', {
+            status: 408,
+            headers: { 'Content-Type': 'text/plain' }
+          });
         });
-      });
     });
 };
 
@@ -55,19 +86,28 @@ const cacheFirstStrategy = (request) => {
 const networkFirstStrategy = (request) => {
   return fetch(request)
     .then((networkResponse) => {
+      // Clone response trước khi sử dụng
       const responseClone = networkResponse.clone();
-      caches.open(CACHE_NAME).then((cache) => {
-        cache.put(request, responseClone);
-      });
+      
+      // Chỉ cache các response hợp lệ
+      if (networkResponse.status === 200) {
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseClone);
+        });
+      }
+      
       return networkResponse;
     })
-    .catch(() => {
+    .catch((error) => {
+      console.log('Fetch failed, trying cache...', error);
       return caches.match(request).then((cacheResponse) => {
+        // Nếu có trong cache, trả về từ cache
         if (cacheResponse) {
           return cacheResponse;
         }
+        
         // Nếu là request API notes và không có cache, trả về từ IndexedDB
-        if (request.url.includes('/notes')) {
+        if (request.url.includes('/notes') || request.url.includes('/api/')) {
           return new Response(JSON.stringify({ 
             offline: true,
             message: 'Data retrieved from offline storage' 
@@ -76,7 +116,7 @@ const networkFirstStrategy = (request) => {
           });
         }
         
-        // Trả về trang offline.html nếu không có cache và không lấy được từ network
+        // Trả về trang offline.html cho các navigation request
         if (request.mode === 'navigate') {
           return caches.match('/offline.html');
         }
@@ -99,11 +139,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Sử dụng cache cho request tới static assets
+  const isStaticAsset = STATIC_ASSETS.some(asset => url.pathname.endsWith(asset)) ||
+                         url.pathname.includes('/css/') || 
+                         url.pathname.includes('/js/') || 
+                         url.pathname.includes('/icons/');
+
   // Xử lý các API request và HTML request riêng biệt
-  if (request.url.includes('/api/') || (request.headers.get('accept') && request.headers.get('accept').includes('application/json'))) {
+  if (request.url.includes('/api/') || 
+      (request.headers.get('accept') && 
+       request.headers.get('accept').includes('application/json'))) {
     event.respondWith(networkFirstStrategy(request));
-  } else if (request.mode === 'navigate' || request.url.endsWith('.html')) {
+  } else if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirstStrategy(request));
+  } else if (isStaticAsset) {
+    event.respondWith(cacheFirstStrategy(request));
   } else {
     event.respondWith(cacheFirstStrategy(request));
   }

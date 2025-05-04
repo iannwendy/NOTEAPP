@@ -2,16 +2,74 @@ import './bootstrap';
 import { offlineDB } from './database';
 import { syncManager } from './sync';
 
+// Lắng nghe sự kiện lỗi toàn cục để xử lý lỗi kết nối
+window.addEventListener('error', function(event) {
+    console.error('Error caught:', event);
+    if (event.message === 'NetworkError' || 
+        event.message.includes('network') || 
+        event.message.includes('Network Error')) {
+        handleNetworkError();
+    }
+});
+
+// Xử lý lỗi kết nối mạng
+function handleNetworkError() {
+    if (!navigator.onLine) {
+        showOfflineNotification();
+    }
+}
+
+// Hiển thị thông báo ngoại tuyến
+function showOfflineNotification() {
+    const notification = document.getElementById('offline-notification');
+    if (!notification) {
+        const newNotification = document.createElement('div');
+        newNotification.id = 'offline-notification';
+        newNotification.className = 'offline-notification visible';
+        
+        newNotification.innerHTML = `
+            <div class="notification-content">
+                <div class="notification-title">Mất kết nối!</div>
+                <div class="notification-message">Ứng dụng sẽ chuyển sang chế độ offline. Các thay đổi của bạn sẽ được lưu cục bộ và đồng bộ hóa khi có kết nối internet trở lại.</div>
+            </div>
+            <button class="notification-close">&times;</button>
+        `;
+        
+        document.body.appendChild(newNotification);
+        
+        const closeButton = newNotification.querySelector('.notification-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                newNotification.classList.remove('visible');
+            });
+        }
+    } else {
+        notification.classList.add('visible');
+    }
+}
+
 // Đăng ký Service Worker nếu trình duyệt hỗ trợ
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
                 console.log('Service Worker đã được đăng ký thành công với phạm vi:', registration.scope);
+                
+                // Kiểm tra và đồng bộ hóa nếu cần
+                if (navigator.onLine && registration.sync) {
+                    registration.sync.register('sync-notes')
+                    .catch(error => console.error('Lỗi đăng ký sync:', error));
+                }
             })
             .catch(error => {
                 console.error('Đăng ký Service Worker thất bại:', error);
             });
+            
+        // Lắng nghe thông báo từ Service Worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            console.log('Nhận tin nhắn từ Service Worker:', event.data);
+            // Xử lý thông báo từ Service Worker
+        });
     });
 }
 
@@ -53,6 +111,10 @@ function updateOfflineStatus() {
     const offlineIndicator = document.querySelector('.offline-indicator');
     if (offlineIndicator) {
         offlineIndicator.classList.toggle('visible', isOffline);
+    }
+    
+    if (isOffline) {
+        showOfflineNotification();
     }
 }
 
@@ -159,8 +221,36 @@ document.addEventListener('DOMContentLoaded', function() {
     addOfflineIndicators();
     
     // Đăng ký sự kiện network
-    window.addEventListener('online', updateOfflineStatus);
-    window.addEventListener('offline', updateOfflineStatus);
+    window.addEventListener('online', () => {
+        updateOfflineStatus();
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'ONLINE_STATUS_CHANGE',
+                online: true
+            });
+        }
+        
+        // Đồng bộ hóa dữ liệu khi online trở lại
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.sync.register('sync-notes')
+                .catch(error => console.error('Lỗi đăng ký sync:', error));
+            });
+        } else {
+            // Nếu không hỗ trợ background sync, thực hiện đồng bộ ngay lập tức
+            syncManager.syncAll();
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        updateOfflineStatus();
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'ONLINE_STATUS_CHANGE',
+                online: false
+            });
+        }
+    });
     
     // Cache ghi chú cho sử dụng offline
     cacheNotesForOffline();

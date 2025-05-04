@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đang Offline - Notes App</title>
+    <link rel="stylesheet" href="/css/offline.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -36,6 +37,12 @@
         .icon {
             font-size: 4rem;
             margin-bottom: 1rem;
+            display: block;
+        }
+        .offline-icon {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1rem;
         }
         .btn {
             display: inline-block;
@@ -46,6 +53,8 @@
             text-decoration: none;
             font-weight: 500;
             transition: background-color 0.3s;
+            cursor: pointer;
+            border: none;
         }
         .btn:hover {
             background-color: #3a7bc8;
@@ -54,6 +63,9 @@
             margin-top: 2rem;
             text-align: left;
             width: 100%;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
         }
         .note-card {
             background-color: #fff9c4;
@@ -70,15 +82,51 @@
             color: #555;
             font-size: 0.9rem;
         }
+        .error-message {
+            color: #e74c3c;
+            margin: 1rem 0;
+            padding: 0.5rem;
+            background-color: #fdeaea;
+            border-radius: 4px;
+            display: none;
+        }
+        .troubleshooting {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f3f5f7;
+            border-radius: 4px;
+        }
+        .troubleshooting ul {
+            text-align: left;
+            padding-left: 1.5rem;
+        }
+        .troubleshooting li {
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">📝</div>
-        <h1>Bạn đang ở chế độ ngoại tuyến</h1>
-        <p>Đừng lo lắng! Bạn vẫn có thể xem các ghi chú đã được lưu trước đó. Khi kết nối internet được khôi phục, ứng dụng sẽ tự động đồng bộ hóa dữ liệu.</p>
+        <!-- <div class="icon">📝</div> -->
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZD0iTTUwIDEwQzI3LjkwODYgMTAgMTAgMjcuOTA4NiAxMCA1MEMxMCA3Mi4wOTE0IDI3LjkwODYgOTAgNTAgOTBDNzIuMDkxNCA5MCA5MCA3Mi4wOTE0IDkwIDUwQzkwIDI3LjkwODYgNzIuMDkxNCAxMCA1MCAxMFoiIHN0cm9rZT0iIzRhOTBlMiIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPHBhdGggZD0iTTY1IDQ1TDUwIDYwTDM1IDQ1IiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPHBhdGggZD0iTTUwIDMwVjU1IiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=" class="offline-icon" alt="Offline">
         
-        <a href="/" class="btn try-again">Thử lại</a>
+        <h1>Không có Internet</h1>
+        <p>Bạn đang ở chế độ ngoại tuyến. Vui lòng kiểm tra kết nối internet và thử lại.</p>
+        
+        <div class="error-message" id="error-message">
+            Không thể kết nối đến máy chủ. Vui lòng thử lại sau.
+        </div>
+        
+        <button class="btn try-again" id="try-again">Thử lại</button>
+        
+        <div class="troubleshooting">
+            <h3>Hãy thử:</h3>
+            <ul>
+                <li>Kiểm tra cáp mạng, modem và bộ định tuyến</li>
+                <li>Kết nối lại với Wi-Fi</li>
+                <li>Kiểm tra thiết lập mạng của bạn</li>
+            </ul>
+        </div>
         
         <div class="notes-container" id="offline-notes">
             <!-- Các ghi chú sẽ được hiển thị ở đây bằng JavaScript -->
@@ -91,67 +139,125 @@
         document.addEventListener('DOMContentLoaded', () => {
             const notesContainer = document.getElementById('offline-notes');
             const noNotesMessage = document.getElementById('no-notes');
+            const errorMessage = document.getElementById('error-message');
             
             // Kiểm tra hỗ trợ IndexedDB
             if (!window.indexedDB) {
-                notesContainer.innerHTML = '<p>Trình duyệt của bạn không hỗ trợ lưu trữ offline.</p>';
+                errorMessage.textContent = 'Trình duyệt của bạn không hỗ trợ lưu trữ offline.';
+                errorMessage.style.display = 'block';
                 return;
             }
             
             // Mở kết nối đến IndexedDB
-            const request = indexedDB.open('notes-offline-db', 1);
+            let request;
+            try {
+                request = indexedDB.open('notes-offline-db', 1);
+            } catch (e) {
+                errorMessage.textContent = 'Không thể mở cơ sở dữ liệu offline: ' + e.message;
+                errorMessage.style.display = 'block';
+                return;
+            }
             
             request.onerror = (event) => {
                 console.error('Lỗi khi mở IndexedDB', event);
-                notesContainer.innerHTML = '<p>Không thể truy cập dữ liệu offline.</p>';
+                errorMessage.textContent = 'Không thể truy cập dữ liệu offline.';
+                errorMessage.style.display = 'block';
+            };
+            
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                // Tạo các object stores nếu chưa tồn tại
+                if (!db.objectStoreNames.contains('notes')) {
+                    const notesStore = db.createObjectStore('notes', { keyPath: 'id' });
+                    notesStore.createIndex('user_id', 'user_id', { unique: false });
+                    notesStore.createIndex('updated_at', 'updated_at', { unique: false });
+                }
+                
+                if (!db.objectStoreNames.contains('pending-operations')) {
+                    const pendingStore = db.createObjectStore('pending-operations', { 
+                        keyPath: 'id', 
+                        autoIncrement: true 
+                    });
+                    pendingStore.createIndex('timestamp', 'timestamp', { unique: false });
+                    pendingStore.createIndex('operation', 'operation', { unique: false });
+                }
             };
             
             request.onsuccess = (event) => {
-                const db = event.target.result;
-                const transaction = db.transaction(['notes'], 'readonly');
-                const objectStore = transaction.objectStore('notes');
-                const notes = [];
-                
-                objectStore.openCursor().onsuccess = (event) => {
-                    const cursor = event.target.result;
+                try {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['notes'], 'readonly');
+                    const objectStore = transaction.objectStore('notes');
+                    const notes = [];
                     
-                    if (cursor) {
-                        notes.push(cursor.value);
-                        cursor.continue();
-                    } else {
-                        // Hiển thị các ghi chú
-                        if (notes.length > 0) {
-                            notes.forEach(note => {
-                                const noteCard = document.createElement('div');
-                                noteCard.className = 'note-card';
-                                noteCard.style.backgroundColor = note.color || '#fff9c4';
-                                
-                                const title = document.createElement('div');
-                                title.className = 'note-title';
-                                title.textContent = note.title;
-                                
-                                const content = document.createElement('div');
-                                content.className = 'note-content';
-                                // Giới hạn nội dung hiển thị để tránh quá dài
-                                content.textContent = note.content.length > 150 ? 
-                                    note.content.substring(0, 150) + '...' : 
-                                    note.content;
-                                
-                                noteCard.appendChild(title);
-                                noteCard.appendChild(content);
-                                notesContainer.appendChild(noteCard);
-                            });
+                    objectStore.openCursor().onsuccess = (event) => {
+                        const cursor = event.target.result;
+                        
+                        if (cursor) {
+                            notes.push(cursor.value);
+                            cursor.continue();
                         } else {
-                            noNotesMessage.style.display = 'block';
+                            // Hiển thị các ghi chú
+                            if (notes.length > 0) {
+                                // Sắp xếp theo thời gian cập nhật giảm dần (mới nhất lên đầu)
+                                notes.sort((a, b) => {
+                                    return new Date(b.updated_at) - new Date(a.updated_at);
+                                });
+                                
+                                notes.forEach(note => {
+                                    const noteCard = document.createElement('div');
+                                    noteCard.className = 'note-card';
+                                    noteCard.style.backgroundColor = note.color || '#fff9c4';
+                                    
+                                    const title = document.createElement('div');
+                                    title.className = 'note-title';
+                                    title.textContent = note.title || 'Không có tiêu đề';
+                                    
+                                    const content = document.createElement('div');
+                                    content.className = 'note-content';
+                                    // Giới hạn nội dung hiển thị để tránh quá dài
+                                    content.textContent = note.content 
+                                        ? (note.content.length > 150 
+                                            ? note.content.substring(0, 150) + '...' 
+                                            : note.content)
+                                        : 'Không có nội dung';
+                                    
+                                    noteCard.appendChild(title);
+                                    noteCard.appendChild(content);
+                                    notesContainer.appendChild(noteCard);
+                                });
+                            } else {
+                                noNotesMessage.style.display = 'block';
+                            }
                         }
-                    }
-                };
+                    };
+                } catch (e) {
+                    console.error('Lỗi khi truy cập dữ liệu:', e);
+                    errorMessage.textContent = 'Lỗi khi truy cập dữ liệu: ' + e.message;
+                    errorMessage.style.display = 'block';
+                }
             };
             
             // Button thử lại
-            document.querySelector('.try-again').addEventListener('click', (e) => {
+            document.getElementById('try-again').addEventListener('click', (e) => {
                 e.preventDefault();
                 window.location.reload();
+            });
+            
+            // Kiểm tra kết nối định kỳ
+            function checkOnlineStatus() {
+                if (navigator.onLine) {
+                    window.location.href = '/';
+                }
+            }
+            
+            // Kiểm tra mỗi 5 giây
+            setInterval(checkOnlineStatus, 5000);
+            
+            // Thêm sự kiện khi trở lại online
+            window.addEventListener('online', () => {
+                console.log('Đã kết nối lại internet!');
+                window.location.href = '/';
             });
         });
     </script>
