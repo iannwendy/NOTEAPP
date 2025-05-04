@@ -508,18 +508,19 @@ class NoteController extends Controller
                 '_broadcast_only' => 'nullable|string',
             ]);
             
-            // Check if we're in broadcast-only mode (collaborative editing)
-            $broadcastOnly = $request->has('_broadcast_only');
-            
-            // Check if this note is shared with other users - only then we should broadcast
+            // Check if this note is shared with other users - only then should we consider broadcasting
             $noteIsShared = $note->shares()->exists();
+            
+            // Only enable broadcast mode if the note is actually shared
+            $broadcastOnly = $noteIsShared && $request->has('_broadcast_only');
             
             // Log the request data for debugging
             Log::debug('Real-time update request', [
                 'user_id' => Auth::id(),
                 'note_id' => $note->id,
                 'socket_id' => $request->header('X-Socket-ID'),
-                'broadcast_only' => $broadcastOnly,
+                'broadcast_requested' => $request->has('_broadcast_only'),
+                'broadcast_enabled' => $broadcastOnly,
                 'note_is_shared' => $noteIsShared,
                 'has_title' => $request->has('title'),
                 'has_content' => $request->has('content'),
@@ -573,10 +574,21 @@ class NoteController extends Controller
                 }
             }
             
+            // For non-shared notes, never mention broadcasting in the response
+            if (!$noteIsShared) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Note updated successfully',
+                    'broadcast_only' => false,
+                    'socket_id' => $request->header('X-Socket-ID')
+                ]);
+            }
+            
+            // For shared notes, include broadcasting details as appropriate
             return response()->json([
                 'success' => true,
-                'message' => $broadcastOnly && $noteIsShared ? 'Real-time update broadcast successfully' : 'Real-time update processed successfully',
-                'broadcast_only' => $broadcastOnly && $noteIsShared,
+                'message' => $broadcastOnly ? 'Real-time update broadcast successfully' : 'Real-time update processed successfully',
+                'broadcast_only' => $broadcastOnly,
                 'socket_id' => $request->header('X-Socket-ID')
             ]);
             
