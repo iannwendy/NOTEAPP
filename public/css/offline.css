@@ -1,7 +1,8 @@
-/* Offline CSS styles - only applied to the offline page */
-/* These styles should not affect the main application */
+/* Offline CSS styles - ONLY for offline.html */
+/* These styles should NOT affect the main application */
 
-body {
+/* Scope all styles to the offline page only */
+.offline-page {
     font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f8f9fa;
     color: #333;
@@ -15,7 +16,7 @@ body {
 }
 
 /* Offline page container */
-.container {
+.offline-page .container {
     max-width: 600px;
     width: 90%;
     margin: 2rem auto;
@@ -26,27 +27,27 @@ body {
     text-align: center;
 }
 
-h1 {
+.offline-page h1 {
     color: #4a90e2;
     margin-bottom: 1rem;
     font-size: 1.8rem;
 }
 
-p {
+.offline-page p {
     line-height: 1.6;
     margin-bottom: 1.5rem;
     color: #555;
 }
 
 /* Offline icon styling */
-.offline-icon {
+.offline-page .offline-icon {
     width: 100px;
     height: 100px;
     margin-bottom: 1rem;
 }
 
 /* Button styling that matches Bootstrap */
-.btn {
+.offline-page .btn {
     display: inline-block;
     background-color: #4a90e2;
     color: white;
@@ -63,12 +64,12 @@ p {
                 border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
-.btn:hover {
+.offline-page .btn:hover {
     background-color: #3a7bc8;
 }
 
 /* Notes container styling */
-.notes-container {
+.offline-page .notes-container {
     margin-top: 2rem;
     text-align: left;
     width: 100%;
@@ -76,7 +77,7 @@ p {
     overflow-y: auto;
 }
 
-.note-card {
+.offline-page .note-card {
     background-color: #fff9c4;
     padding: 1rem;
     border-radius: 4px;
@@ -84,18 +85,18 @@ p {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.note-title {
+.offline-page .note-title {
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
 
-.note-content {
+.offline-page .note-content {
     color: #555;
     font-size: 0.9rem;
 }
 
 /* Error message styling */
-.error-message {
+.offline-page .error-message {
     color: #721c24;
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;
@@ -107,22 +108,23 @@ p {
 }
 
 /* Troubleshooting section styling */
-.troubleshooting {
+.offline-page .troubleshooting {
     margin-top: 1.5rem;
     padding: 1rem;
     background-color: #f3f5f7;
     border-radius: 4px;
 }
 
-.troubleshooting ul {
+.offline-page .troubleshooting ul {
     text-align: left;
     padding-left: 1.5rem;
 }
 
-.troubleshooting li {
+.offline-page .troubleshooting li {
     margin-bottom: 0.5rem;
 }
 
+/* These indicators are used in the main app - DO NOT scope them to offline-page */
 /* Offline notification that appears when going offline */
 .offline-notification {
     position: fixed;
@@ -208,15 +210,15 @@ p {
     display: block;
 }
 
-/* Responsive design improvements */
+/* Responsive design improvements - only for offline page */
 @media (max-width: 768px) {
-    .container {
+    .offline-page .container {
         width: 85%;
         padding: 1.5rem;
         margin: 1rem auto;
     }
     
-    h1 {
+    .offline-page h1 {
         font-size: 1.5rem;
     }
     
@@ -226,7 +228,7 @@ p {
         max-width: none;
     }
     
-    .offline-icon {
+    .offline-page .offline-icon {
         width: 80px;
         height: 80px;
     }
@@ -234,107 +236,107 @@ p {
 
 /* Smaller devices */
 @media (max-width: 576px) {
-    .container {
+    .offline-page .container {
         width: 90%;
         padding: 1rem;
     }
     
-    h1 {
+    .offline-page h1 {
         font-size: 1.3rem;
     }
     
-    .troubleshooting {
+    .offline-page .troubleshooting {
         padding: 0.75rem;
     }
     
-    .notes-container {
+    .offline-page .notes-container {
         max-height: 30vh;
     }
 }
 
 /* Dark mode support - uses the same dark theme as the main app */
 @media (prefers-color-scheme: dark) {
-    body {
+    .offline-page {
         background-color: #212529;
         color: #f8f9fa;
     }
     
-    .container {
+    .offline-page .container {
         background-color: #343a40;
         border: 1px solid #495057;
     }
     
-    h1 {
+    .offline-page h1 {
         color: #8bb9fe;
     }
     
-    p {
+    .offline-page p {
         color: #e2e8f0;
     }
     
-    .note-card {
+    .offline-page .note-card {
         background-color: #4a5568;
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    .note-title {
+    .offline-page .note-title {
         color: #e2e8f0;
     }
     
-    .note-content {
+    .offline-page .note-content {
         color: #cbd5e0;
     }
     
-    .troubleshooting {
+    .offline-page .troubleshooting {
         background-color: #2d3748;
         border: 1px solid #4a5568;
     }
     
-    .error-message {
+    .offline-page .error-message {
         background-color: #742029;
         color: #f8d7da;
         border-color: #883e43;
     }
 }
 
-/* Add compatibility with existing dark theme class */
-body.dark-theme {
+/* Compatibility with existing dark theme class */
+body.dark-theme .offline-page {
     background-color: #212529;
     color: #f8f9fa;
 }
 
-body.dark-theme .container {
+body.dark-theme .offline-page .container {
     background-color: #343a40;
     border: 1px solid #495057;
 }
 
-body.dark-theme h1 {
+body.dark-theme .offline-page h1 {
     color: #8bb9fe;
 }
 
-body.dark-theme p {
+body.dark-theme .offline-page p {
     color: #e2e8f0;
 }
 
-body.dark-theme .note-card {
+body.dark-theme .offline-page .note-card {
     background-color: #4a5568;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-body.dark-theme .note-title {
+body.dark-theme .offline-page .note-title {
     color: #e2e8f0;
 }
 
-body.dark-theme .note-content {
+body.dark-theme .offline-page .note-content {
     color: #cbd5e0;
 }
 
-body.dark-theme .troubleshooting {
+body.dark-theme .offline-page .troubleshooting {
     background-color: #2d3748;
     border: 1px solid #4a5568;
 }
 
-body.dark-theme .error-message {
+body.dark-theme .offline-page .error-message {
     background-color: #742029;
     color: #f8d7da;
     border-color: #883e43;

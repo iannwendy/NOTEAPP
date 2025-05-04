@@ -1,4 +1,4 @@
-const CACHE_NAME = 'notes-app-cache-v3';
+const CACHE_NAME = 'notes-app-cache-v4';
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
@@ -76,6 +76,14 @@ const cacheFirstStrategy = (request) => {
           if (request.mode === 'navigate') {
             return caches.match('/offline.html');
           }
+          
+          // Xử lý CSS mặc định
+          if (request.url.endsWith('.css')) {
+            return new Response('/* Fallback CSS */', {
+              headers: { 'Content-Type': 'text/css' }
+            });
+          }
+          
           return new Response('Network error happened', {
             status: 408,
             headers: { 'Content-Type': 'text/plain' }
@@ -126,6 +134,13 @@ const networkFirstStrategy = (request) => {
         // Xử lý các resource khác
         const url = new URL(request.url);
         if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico)$/)) {
+          // Trả về CSS trống cho các request CSS để tránh lỗi
+          if (url.pathname.endsWith('.css')) {
+            return new Response('/* Empty CSS fallback */', {
+              headers: { 'Content-Type': 'text/css' }
+            });
+          }
+          
           return new Response('Not available offline', {
             status: 404,
             headers: { 'Content-Type': 'text/plain' }
@@ -152,6 +167,12 @@ self.addEventListener('fetch', (event) => {
 
   // Bỏ qua các request đến các tài nguyên khác tên miền (để tránh CORS issues)
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Trường hợp đặc biệt cho file offline.css - luôn lấy từ cache hoặc network
+  if (url.pathname === '/css/offline.css') {
+    event.respondWith(cacheFirstStrategy(request));
     return;
   }
 
