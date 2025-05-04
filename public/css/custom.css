@@ -811,4 +811,62 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
 /* Fixed width buttons for consistency */
 .btn-sm {
     min-width: 60px;
+}
+
+/* Fix for modal content overflow */
+.modal-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px);
+}
+
+.modal-body p {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Specific fix for note title in labels modal */
+#note-title-display {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.modal-body p {
+    max-width: 100%;
+}
+
+/* Make sure modal content stays within bounds */
+.modal-content {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.modal-body {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Label list in modal */
+#labels-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Custom label check in modal */
+.custom-label-check {
+    display: flex;
+    align-items: center;
+}
+
+.custom-label-check label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 40px);
 } 

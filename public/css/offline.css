@@ -691,4 +691,144 @@ body.dark-theme .offline-page .note-view-footer {
         max-width: 100%;
         margin-bottom: 10px;
     }
+}
+
+/* Modals in Offline Mode */
+.offline-page .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.offline-page .modal-content {
+    background-color: white;
+    border-radius: 8px;
+    max-width: 90%;
+    width: 500px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.offline-page .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.offline-page .modal-title {
+    margin: 0;
+    font-size: 1.2rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px);
+}
+
+.offline-page .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+}
+
+.offline-page .modal-body {
+    padding: 1rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.offline-page .modal-body p {
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.offline-page .modal-body .note-title-display {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.offline-page .modal-footer {
+    padding: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.offline-page .labels-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.offline-page .custom-label-check {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+}
+
+.offline-page .custom-label-check label {
+    margin-left: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 40px);
+}
+
+/* Dark theme support for modals */
+@media (prefers-color-scheme: dark) {
+    .offline-page .modal-content {
+        background-color: #343a40;
+        border: 1px solid #495057;
+    }
+    
+    .offline-page .modal-header,
+    .offline-page .modal-footer {
+        border-color: #495057;
+    }
+    
+    .offline-page .modal-title,
+    .offline-page .modal-body {
+        color: #f8f9fa;
+    }
+    
+    .offline-page .modal-close {
+        color: #f8f9fa;
+    }
+}
+
+body.dark-theme .offline-page .modal-content {
+    background-color: #343a40;
+    border: 1px solid #495057;
+}
+
+body.dark-theme .offline-page .modal-header,
+body.dark-theme .offline-page .modal-footer {
+    border-color: #495057;
+}
+
+body.dark-theme .offline-page .modal-title,
+body.dark-theme .offline-page .modal-body {
+    color: #f8f9fa;
+}
+
+body.dark-theme .offline-page .modal-close {
+    color: #f8f9fa;
 } 
