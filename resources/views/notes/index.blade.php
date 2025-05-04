@@ -325,12 +325,20 @@ use Illuminate\Support\Str;
             if (!labels || labels.length === 0) {
                 labelsList.innerHTML = '<p>You haven\'t created any labels yet.</p>';
             } else {
+                // Show loading indicator
+                labelsLoading.classList.remove('d-none');
+                labelsList.classList.add('d-none');
+                
                 // Fetch the current note's labels
                 fetch(`/notes/${currentNoteId}?_labels=1`)
                     .then(response => response.json())
                     .then(data => {
+                        // Hide loading indicator
+                        labelsLoading.classList.add('d-none');
+                        
                         if (data.success) {
                             const currentNoteLabels = data.labels.map(label => label.id);
+                            console.log('Note labels:', currentNoteLabels); // Debug
                             
                             // Sort labels by whether they are attached to the current note
                             labels.sort((a, b) => {
@@ -343,7 +351,8 @@ use Illuminate\Support\Str;
                             });
                             
                             const labelsHtml = labels.map(label => {
-                                const isAttached = currentNoteLabels.includes(label.id);
+                                const isAttached = currentNoteLabels.includes(Number(label.id)); // Ensure number comparison
+                                console.log(`Label ${label.id} (${label.name}) attached: ${isAttached}`); // Debug
                                 
                                 return `
                                     <div class="custom-label-check p-2 ${isAttached ? 'bg-light rounded' : ''}">
@@ -383,6 +392,8 @@ use Illuminate\Support\Str;
                         }
                     })
                     .catch(error => {
+                        // Hide loading indicator on error
+                        labelsLoading.classList.add('d-none');
                         console.error('Error fetching note labels:', error);
                         showError('Failed to load note labels');
                     });
@@ -397,14 +408,23 @@ use Illuminate\Support\Str;
             formData.append('note_id', currentNoteId);
             formData.append('label_id', labelId);
             
+            // Show a loading indicator on the checkbox
+            const originalParentBg = checkbox.closest('.custom-label-check').style.backgroundColor;
+            checkbox.closest('.custom-label-check').style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+            
             fetch('{{ route('labels.add-to-note') }}', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     checkbox.closest('.custom-label-check').classList.add('bg-light', 'rounded');
+                    // Ensure checkbox is checked
+                    checkbox.checked = true;
                     showToast('Success', data.message || 'Label attached successfully', 'success');
                     
                     // Update labels display on the note
@@ -421,6 +441,7 @@ use Illuminate\Support\Str;
             })
             .finally(() => {
                 checkbox.disabled = false;
+                checkbox.closest('.custom-label-check').style.backgroundColor = originalParentBg;
             });
         }
         
@@ -432,14 +453,23 @@ use Illuminate\Support\Str;
             formData.append('note_id', currentNoteId);
             formData.append('label_id', labelId);
             
+            // Show a loading indicator on the checkbox
+            const originalParentBg = checkbox.closest('.custom-label-check').style.backgroundColor;
+            checkbox.closest('.custom-label-check').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+            
             fetch('{{ route('labels.remove-from-note') }}', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     checkbox.closest('.custom-label-check').classList.remove('bg-light', 'rounded');
+                    // Ensure checkbox is unchecked
+                    checkbox.checked = false;
                     showToast('Success', data.message || 'Label removed successfully', 'success');
                     
                     // Update labels display on the note
@@ -456,6 +486,7 @@ use Illuminate\Support\Str;
             })
             .finally(() => {
                 checkbox.disabled = false;
+                checkbox.closest('.custom-label-check').style.backgroundColor = originalParentBg;
             });
         }
         

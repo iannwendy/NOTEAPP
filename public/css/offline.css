@@ -782,14 +782,46 @@ body.dark-theme .offline-page .note-view-footer {
     display: flex;
     align-items: center;
     padding: 0.5rem;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
 }
 
-.offline-page .custom-label-check label {
-    margin-left: 0.5rem;
+.offline-page .custom-label-check:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.offline-page .form-check-input-container {
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+}
+
+.offline-page .form-check-input {
+    margin-top: 0;
+    margin-right: 0;
+}
+
+.offline-page .form-check-label {
+    margin-left: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: calc(100% - 40px);
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.offline-page .form-check-label .d-inline-block {
+    margin-right: 10px !important;
+    width: 1rem !important;
+    height: 1rem !important;
+    border-radius: 50% !important;
+    border: 1px solid #ccc !important;
+    flex-shrink: 0;
 }
 
 /* Dark theme support for modals */
@@ -811,6 +843,14 @@ body.dark-theme .offline-page .note-view-footer {
     
     .offline-page .modal-close {
         color: #f8f9fa;
+    }
+    
+    .offline-page .custom-label-check:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .offline-page .form-check-label .d-inline-block {
+        border-color: #555 !important;
     }
 }
 
