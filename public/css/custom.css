@@ -626,4 +626,29 @@ body.dark-theme #list-view .list-group-item .note-content {
 body.dark-theme .navbar-nav .nav-link.fw-bold {
     color: #8bb9fe !important;
     border-bottom: 2px solid #8bb9fe;
+}
+
+/* Fix for note content overflow in grid view */
+#grid-view .card.note-card .card-body {
+    overflow: hidden;
+    max-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+#grid-view .card.note-card .card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    max-height: 125px;
+}
+
+/* Ensure card title also doesn't overflow */
+#grid-view .card.note-card .card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 } 
