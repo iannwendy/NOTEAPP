@@ -651,4 +651,45 @@ body.dark-theme .navbar-nav .nav-link.fw-bold {
     text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 100%;
+}
+
+/* Fix for overflow in list view, especially on smaller devices */
+#list-view .list-group-item.note-card {
+    overflow: hidden;
+}
+
+#list-view .list-group-item.note-card h5 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+#list-view .list-group-item.note-card p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    max-height: 75px;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 767px) {
+    #list-view .list-group-item.note-card {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    #list-view .list-group-item.note-card > div:last-child {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    #list-view .list-group-item.note-card .btn {
+        margin-bottom: 5px;
+    }
 } 
