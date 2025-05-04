@@ -511,12 +511,16 @@ class NoteController extends Controller
             // Check if we're in broadcast-only mode (collaborative editing)
             $broadcastOnly = $request->has('_broadcast_only');
             
+            // Check if this note is shared with other users - only then we should broadcast
+            $noteIsShared = $note->shares()->exists();
+            
             // Log the request data for debugging
             Log::debug('Real-time update request', [
                 'user_id' => Auth::id(),
                 'note_id' => $note->id,
                 'socket_id' => $request->header('X-Socket-ID'),
                 'broadcast_only' => $broadcastOnly,
+                'note_is_shared' => $noteIsShared,
                 'has_title' => $request->has('title'),
                 'has_content' => $request->has('content'),
                 'request_data' => $request->all()
@@ -530,16 +534,19 @@ class NoteController extends Controller
                     $note->save();
                 }
                 
-                // Broadcast the change to others - ensure the socketId is excluded
-                event(new \App\Events\NoteTitleUpdated($note, Auth::user(), $request->title));
-                
-                // Log for debugging
-                Log::debug('Broadcasting title update', [
-                    'note_id' => $note->id,
-                    'user_id' => Auth::id(),
-                    'socket_id' => $request->header('X-Socket-ID'),
-                    'broadcast_only' => $broadcastOnly
-                ]);
+                // Only broadcast if the note is shared with others
+                if ($noteIsShared) {
+                    // Broadcast the change to others - ensure the socketId is excluded
+                    event(new \App\Events\NoteTitleUpdated($note, Auth::user(), $request->title));
+                    
+                    // Log for debugging
+                    Log::debug('Broadcasting title update', [
+                        'note_id' => $note->id,
+                        'user_id' => Auth::id(),
+                        'socket_id' => $request->header('X-Socket-ID'),
+                        'broadcast_only' => $broadcastOnly
+                    ]);
+                }
             }
             
             // Handle content update
@@ -550,23 +557,26 @@ class NoteController extends Controller
                     $note->save();
                 }
                 
-                // Broadcast the change to others - ensure the socketId is excluded
-                event(new \App\Events\NoteContentUpdated($note, Auth::user(), $request->content));
-                
-                // Log for debugging
-                Log::debug('Broadcasting content update', [
-                    'note_id' => $note->id,
-                    'user_id' => Auth::id(),
-                    'socket_id' => $request->header('X-Socket-ID'),
-                    'broadcast_only' => $broadcastOnly,
-                    'content_length' => strlen($request->content)
-                ]);
+                // Only broadcast if the note is shared with others
+                if ($noteIsShared) {
+                    // Broadcast the change to others - ensure the socketId is excluded
+                    event(new \App\Events\NoteContentUpdated($note, Auth::user(), $request->content));
+                    
+                    // Log for debugging
+                    Log::debug('Broadcasting content update', [
+                        'note_id' => $note->id,
+                        'user_id' => Auth::id(),
+                        'socket_id' => $request->header('X-Socket-ID'),
+                        'broadcast_only' => $broadcastOnly,
+                        'content_length' => strlen($request->content)
+                    ]);
+                }
             }
             
             return response()->json([
                 'success' => true,
-                'message' => $broadcastOnly ? 'Real-time update broadcast successfully' : 'Real-time update processed successfully',
-                'broadcast_only' => $broadcastOnly,
+                'message' => $broadcastOnly && $noteIsShared ? 'Real-time update broadcast successfully' : 'Real-time update processed successfully',
+                'broadcast_only' => $broadcastOnly && $noteIsShared,
                 'socket_id' => $request->header('X-Socket-ID')
             ]);
             
@@ -598,8 +608,19 @@ class NoteController extends Controller
         }
 
         try {
-            // Broadcast that the user has left the edit session
-            event(new \App\Events\UserLeftEditSession($note, Auth::user()));
+            // Check if this note is shared with other users
+            $noteIsShared = $note->shares()->exists();
+            
+            // Only broadcast if the note is shared with others
+            if ($noteIsShared) {
+                // Broadcast that the user has left the edit session
+                event(new \App\Events\UserLeftEditSession($note, Auth::user()));
+                
+                Log::debug('Broadcasting user left edit session', [
+                    'note_id' => $note->id,
+                    'user_id' => Auth::id()
+                ]);
+            }
             
             return response()->json([
                 'success' => true,
@@ -634,11 +655,23 @@ class NoteController extends Controller
         }
 
         try {
-            // Update the last_heartbeat timestamp in cache
-            $key = 'note_edit_heartbeat_' . $note->id . '_' . Auth::id();
-            $expiresAt = now()->addMinutes(1); // Expires after 1 minute of inactivity
+            // Check if this note is shared with other users
+            $noteIsShared = $note->shares()->exists();
             
-            cache()->put($key, now()->timestamp, $expiresAt);
+            // Only update the heartbeat cache if the note is shared
+            if ($noteIsShared) {
+                // Update the last_heartbeat timestamp in cache
+                $key = 'note_edit_heartbeat_' . $note->id . '_' . Auth::id();
+                $expiresAt = now()->addMinutes(1); // Expires after 1 minute of inactivity
+                
+                cache()->put($key, now()->timestamp, $expiresAt);
+                
+                Log::debug('Heartbeat received for shared note', [
+                    'note_id' => $note->id,
+                    'user_id' => Auth::id(),
+                    'timestamp' => now()->timestamp
+                ]);
+            }
             
             return response()->json([
                 'success' => true,
