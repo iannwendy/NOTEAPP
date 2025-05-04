@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+use Illuminate\Support\Str;
+@endphp
 <script>
     // Define user ID for JavaScript use
     const APP_USER_ID = {{ auth()->id() }};
