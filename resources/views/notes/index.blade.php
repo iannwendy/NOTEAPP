@@ -280,6 +280,11 @@ use Illuminate\Support\Str;
                 // Update the modal title with note title
                 document.getElementById('note-title-display').textContent = noteTitle;
                 
+                // Clear any existing checkboxes
+                if (labelsList) {
+                    labelsList.innerHTML = '';
+                }
+                
                 // Load labels
                 loadLabels();
             });
@@ -337,13 +342,14 @@ use Illuminate\Support\Str;
                         labelsLoading.classList.add('d-none');
                         
                         if (data.success) {
-                            const currentNoteLabels = data.labels.map(label => label.id);
+                            // Extract IDs as numbers to ensure consistent comparison
+                            const currentNoteLabels = data.labels.map(label => Number(label.id));
                             console.log('Note labels:', currentNoteLabels); // Debug
                             
                             // Sort labels by whether they are attached to the current note
                             labels.sort((a, b) => {
-                                const aIsAttached = currentNoteLabels.includes(a.id);
-                                const bIsAttached = currentNoteLabels.includes(b.id);
+                                const aIsAttached = currentNoteLabels.includes(Number(a.id));
+                                const bIsAttached = currentNoteLabels.includes(Number(b.id));
                                 
                                 if (aIsAttached && !bIsAttached) return -1;
                                 if (!aIsAttached && bIsAttached) return 1;
@@ -351,17 +357,18 @@ use Illuminate\Support\Str;
                             });
                             
                             const labelsHtml = labels.map(label => {
-                                const isAttached = currentNoteLabels.includes(Number(label.id)); // Ensure number comparison
-                                console.log(`Label ${label.id} (${label.name}) attached: ${isAttached}`); // Debug
+                                const labelId = Number(label.id);
+                                const isAttached = currentNoteLabels.includes(labelId);
+                                console.log(`Label ${labelId} (${label.name}) attached: ${isAttached}`); // Debug
                                 
                                 return `
                                     <div class="custom-label-check p-2 ${isAttached ? 'bg-light rounded' : ''}">
                                         <span class="form-check-input-container">
-                                            <input class="form-check-input" type="checkbox" value="${label.id}" 
-                                                id="label-${label.id}" ${isAttached ? 'checked' : ''} 
-                                                data-label-id="${label.id}">
+                                            <input class="form-check-input" type="checkbox" value="${labelId}" 
+                                                id="label-${labelId}" ${isAttached ? 'checked' : ''} 
+                                                data-label-id="${labelId}">
                                         </span>
-                                        <label class="form-check-label" for="label-${label.id}">
+                                        <label class="form-check-label" for="label-${labelId}">
                                             <span class="d-inline-block me-2" style="width: 1rem; height: 1rem; background-color: ${label.color}; border-radius: 50%; border: 1px solid #ccc;"></span>
                                             ${label.name}
                                         </label>
@@ -429,15 +436,20 @@ use Illuminate\Support\Str;
                     
                     // Update labels display on the note
                     updateNoteLabelsDisplay(currentNoteId, true);
+                    
+                    // Refresh labels list to ensure UI stays in sync
+                    refreshLabelsList();
                 } else {
                     showToast('Error', data.message || 'Failed to attach label', 'danger');
                     checkbox.checked = false;
+                    refreshLabelsList(); // Refresh in case of error
                 }
             })
             .catch(error => {
                 console.error('Error adding label:', error);
                 showToast('Error', 'Failed to attach label', 'danger');
                 checkbox.checked = false;
+                refreshLabelsList(); // Refresh in case of error
             })
             .finally(() => {
                 checkbox.disabled = false;
@@ -474,20 +486,36 @@ use Illuminate\Support\Str;
                     
                     // Update labels display on the note
                     updateNoteLabelsDisplay(currentNoteId, false);
+                    
+                    // Refresh labels list to ensure UI stays in sync
+                    refreshLabelsList();
                 } else {
                     showToast('Error', data.message || 'Failed to remove label', 'danger');
                     checkbox.checked = true;
+                    refreshLabelsList(); // Refresh in case of error
                 }
             })
             .catch(error => {
                 console.error('Error removing label:', error);
                 showToast('Error', 'Failed to remove label', 'danger');
                 checkbox.checked = true;
+                refreshLabelsList(); // Refresh in case of error
             })
             .finally(() => {
                 checkbox.disabled = false;
                 checkbox.closest('.custom-label-check').style.backgroundColor = originalParentBg;
             });
+        }
+        
+        // Function to refresh labels list to ensure UI is in sync with server state
+        function refreshLabelsList() {
+            // Wait a bit before refreshing to ensure server has updated
+            setTimeout(() => {
+                if (labelsList) {
+                    labelsList.innerHTML = '';
+                }
+                loadLabels();
+            }, 300);
         }
         
         // Function to update the note labels display in both grid and list views
