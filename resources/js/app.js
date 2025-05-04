@@ -75,15 +75,22 @@ if ('serviceWorker' in navigator) {
 
 // Thêm indicator cho trạng thái offline/online
 function addOfflineIndicators() {
+    // Kiểm tra xem indicator đã tồn tại chưa
+    if (document.querySelector('.offline-indicator')) {
+        return;
+    }
+    
     // Chỉ báo offline
     const offlineIndicator = document.createElement('div');
     offlineIndicator.className = 'offline-indicator';
+    offlineIndicator.id = 'offline-indicator';
     offlineIndicator.textContent = 'Ngoại tuyến';
     document.body.appendChild(offlineIndicator);
     
     // Chỉ báo đồng bộ hóa
     const syncIndicator = document.createElement('div');
     syncIndicator.className = 'sync-indicator';
+    syncIndicator.id = 'sync-indicator';
     syncIndicator.textContent = 'Đang đồng bộ...';
     document.body.appendChild(syncIndicator);
     

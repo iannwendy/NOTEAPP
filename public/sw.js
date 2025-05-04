@@ -1,8 +1,9 @@
-const CACHE_NAME = 'notes-app-cache-v2';
+const CACHE_NAME = 'notes-app-cache-v3';
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
   '/css/app.css',
+  '/css/custom.css',
   '/css/offline.css',
   '/js/app.js',
   '/js/manifest.js',
@@ -40,8 +41,9 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.filter((cacheName) => {
-          return cacheName !== CACHE_NAME;
+          return cacheName.startsWith('notes-app-cache') && cacheName !== CACHE_NAME;
         }).map((cacheName) => {
+          console.log('Deleting old cache:', cacheName);
           return caches.delete(cacheName);
         })
       );
@@ -121,6 +123,15 @@ const networkFirstStrategy = (request) => {
           return caches.match('/offline.html');
         }
         
+        // Xử lý các resource khác
+        const url = new URL(request.url);
+        if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico)$/)) {
+          return new Response('Not available offline', {
+            status: 404,
+            headers: { 'Content-Type': 'text/plain' }
+          });
+        }
+        
         return new Response('Offline and no cache available', {
           status: 503,
           statusText: 'Service Unavailable'
@@ -139,11 +150,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Sử dụng cache cho request tới static assets
-  const isStaticAsset = STATIC_ASSETS.some(asset => url.pathname.endsWith(asset)) ||
-                         url.pathname.includes('/css/') || 
-                         url.pathname.includes('/js/') || 
-                         url.pathname.includes('/icons/');
+  // Bỏ qua các request đến các tài nguyên khác tên miền (để tránh CORS issues)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Xử lý các static assets (CSS, JS, images)
+  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico)$/)) {
+    event.respondWith(cacheFirstStrategy(request));
+    return;
+  }
 
   // Xử lý các API request và HTML request riêng biệt
   if (request.url.includes('/api/') || 
@@ -152,10 +168,25 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkFirstStrategy(request));
   } else if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(networkFirstStrategy(request));
-  } else if (isStaticAsset) {
-    event.respondWith(cacheFirstStrategy(request));
   } else {
     event.respondWith(cacheFirstStrategy(request));
+  }
+});
+
+// Xử lý tin nhắn từ clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'ONLINE_STATUS_CHANGE') {
+    if (event.data.online) {
+      console.log('Client is back online, starting sync...');
+      self.registration.sync.register('sync-notes')
+        .catch(err => console.error('Sync registration failed:', err));
+    } else {
+      console.log('Client went offline');
+    }
   }
 });
 
@@ -193,7 +224,7 @@ function syncNotes() {
 
 // Xử lý push notifications
 self.addEventListener('push', (event) => {
-  const data = event.data.json();
+  const data = event.data ? event.data.json() : { title: 'Notification' };
   
   const options = {
     body: data.body || 'Có cập nhật mới cho ghi chú của bạn',
