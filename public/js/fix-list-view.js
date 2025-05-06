@@ -77,16 +77,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const noteColor = item.getAttribute('data-note-color') || null;
                 
                 if (noteColor && noteColor !== '#ffffff' && noteColor !== '#fff') {
-                    // If the note has a custom color, keep it but adjust text color
+                    // If the note has a custom color, keep it but use white text
                     item.style.setProperty('background-color', noteColor, 'important');
-                    
-                    // Determine if the background is dark
-                    const isDarkBg = isDarkColor(noteColor);
-                    item.style.setProperty('color', isDarkBg ? '#ffffff' : '#000000', 'important');
+                    item.style.setProperty('color', '#ffffff', 'important');
                 } else {
                     // For default notes, use dark theme styling
                     item.style.setProperty('background-color', '#343a40', 'important');
-                    item.style.setProperty('color', '#f8f9fa', 'important');
+                    item.style.setProperty('color', '#ffffff', 'important');
                 }
                 
                 item.style.setProperty('border-color', 'rgba(255, 255, 255, 0.2)', 'important');
@@ -95,12 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const noteColor = item.getAttribute('data-note-color') || '#ffffff';
                 item.style.setProperty('background-color', noteColor, 'important');
                 
-                // Set text color based on background color
-                if (noteColor === '#ffffff' || noteColor === '#fff' || isLightColor(noteColor)) {
-                    item.style.setProperty('color', '#000000', 'important');
-                } else {
-                    item.style.setProperty('color', '#ffffff', 'important');
-                }
+                // Always use black text in light mode
+                item.style.setProperty('color', '#000000', 'important');
                 
                 item.style.setProperty('border-color', 'rgba(0, 0, 0, 0.125)', 'important');
             }
@@ -121,23 +114,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 const noteColor = card.getAttribute('data-note-color') || extractColorFromStyle(card.getAttribute('style'));
                 
                 if (noteColor && noteColor !== '#ffffff' && noteColor !== '#fff') {
-                    // If the note has a custom color, ensure it's applied and adjust text color
+                    // If the note has a custom color, ensure it's applied with white text
                     card.style.setProperty('background-color', noteColor, 'important');
+                    card.style.setProperty('color', '#ffffff', 'important');
                     
-                    // Determine if the background is dark
-                    const isDarkBg = isDarkColor(noteColor);
-                    card.style.setProperty('color', isDarkBg ? '#ffffff' : '#000000', 'important');
-                    
-                    // Also apply the color to card-title and card-text elements
-                    const textColor = isDarkBg ? '#ffffff' : '#000000';
-                    applyColorToCardContents(card, textColor);
+                    // Apply white text to all content
+                    applyColorToCardContents(card, '#ffffff');
                 } else {
                     // For default notes, use dark theme styling
                     card.style.setProperty('background-color', '#343a40', 'important');
-                    card.style.setProperty('color', '#f8f9fa', 'important');
+                    card.style.setProperty('color', '#ffffff', 'important');
                     
-                    // Also apply the color to card-title and card-text elements
-                    applyColorToCardContents(card, '#f8f9fa');
+                    // Apply white text to all content
+                    applyColorToCardContents(card, '#ffffff');
                 }
                 
                 // Apply dark theme border
@@ -147,18 +136,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const noteColor = card.getAttribute('data-note-color') || extractColorFromStyle(card.getAttribute('style')) || '#ffffff';
                 card.style.setProperty('background-color', noteColor, 'important');
                 
-                // Set text color based on background color
-                let textColor;
-                if (noteColor === '#ffffff' || noteColor === '#fff' || isLightColor(noteColor)) {
-                    textColor = '#000000';
-                } else {
-                    textColor = '#ffffff';
-                }
+                // Always use black text in light mode
+                card.style.setProperty('color', '#000000', 'important');
                 
-                card.style.setProperty('color', textColor, 'important');
-                
-                // Also apply the color to card-title and card-text elements
-                applyColorToCardContents(card, textColor);
+                // Apply black text to all content
+                applyColorToCardContents(card, '#000000');
                 
                 card.style.setProperty('border-color', 'rgba(0, 0, 0, 0.125)', 'important');
             }
