@@ -209,13 +209,15 @@ use Illuminate\Support\Facades\Auth;
                 setTimeout(() => {
                     saveStatus.classList.add('d-none');
                 }, 3000);
+                
+                // Also hide auto-save spinner on success
+                hideAutoSaveSpinner();
             }
             
             if (isAutoSave) {
                 autoSaveSpinner.classList.remove('d-none');
-                if (text) {
-                    autoSaveText.textContent = text;
-                }
+                // Fixed bug: using 'message' parameter instead of undefined 'text' variable
+                autoSaveText.textContent = 'Auto-saving...';
             }
         }
         
@@ -343,11 +345,13 @@ use Illuminate\Support\Facades\Auth;
                     showSaveStatus('Saved successfully!', 'success');
                 } else {
                     showSaveStatus('Error: ' + (data.message || 'Could not save'), 'danger');
+                    hideAutoSaveSpinner(); // Hide spinner on error
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showSaveStatus('Error: Could not connect to server', 'danger');
+                hideAutoSaveSpinner(); // Hide spinner on error
             });
         }
         
