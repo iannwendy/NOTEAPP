@@ -96,7 +96,9 @@
         console.log('Default note color loaded:', colorField.value);
         
         let typingTimer;
-        const doneTypingInterval = 5000; // Increased from 3000 to 5000ms to reduce duplicates
+        let autoSaveTimer; // Timer for periodic auto-save
+        const doneTypingInterval = 1000; // Save after 1 second of inactivity
+        const autoSaveInterval = 5000; // Auto-save every 5 seconds
         let isDirty = false;
         let isSaving = false;
         let lastSavedTitle = '';
@@ -104,8 +106,15 @@
         let currentNoteId = '';
         let autoSavePending = false;
         let noteCreated = false;
+        let isAutosaving = false; // Track if autosave is in progress
         
-        function showSaveStatus(message, type = 'info') {
+        // Start periodic auto-save
+        setupAutoSave();
+        
+        // Show initial message about auto-save
+        showSaveStatus('Auto-save enabled - saving every 5 seconds', 'info');
+        
+        function showSaveStatus(message, type = 'info', isAutoSave = false) {
             saveStatus.textContent = message;
             saveStatus.classList.remove('d-none', 'alert-info', 'alert-success', 'alert-danger');
             saveStatus.classList.add(`alert-${type}`);
@@ -115,6 +124,14 @@
                 setTimeout(() => {
                     saveStatus.classList.add('d-none');
                 }, 3000);
+                hideAutoSaveSpinner();
+                isAutosaving = false;
+            }
+            
+            if (isAutoSave) {
+                autoSaveSpinner.classList.remove('d-none');
+                autoSaveText.textContent = 'Auto-saving...';
+                isAutosaving = true;
             }
         }
         
@@ -123,12 +140,32 @@
             if (text) {
                 autoSaveText.textContent = text;
             }
+            isAutosaving = true;
         }
         
         function hideAutoSaveSpinner() {
             setTimeout(() => {
                 autoSaveSpinner.classList.add('d-none');
+                isAutosaving = false;
             }, 1000);
+        }
+        
+        // Function to setup periodic auto-save
+        function setupAutoSave() {
+            // Clear any existing timer
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+            
+            // Set up periodic auto-save every 5 seconds
+            autoSaveTimer = setInterval(() => {
+                if (isDirty && !isSaving && !isAutosaving) {
+                    console.log('Auto-saving on timer...');
+                    saveNote();
+                }
+            }, autoSaveInterval);
+            
+            console.log('Periodic auto-save initialized - will save every ' + (autoSaveInterval/1000) + ' seconds');
         }
         
         async function saveNote() {
@@ -148,8 +185,9 @@
             }
             
             isSaving = true;
+            isAutosaving = true;
             showAutoSaveSpinner('Auto-saving...');
-            showSaveStatus('Saving...', 'info');
+            showSaveStatus('Saving...', 'info', true);
             
             try {
                 const formData = new FormData();
@@ -208,19 +246,21 @@
                     showSaveStatus('Note saved successfully!', 'success');
                 } else {
                     showSaveStatus('Error: ' + (result.message || 'Failed to save'), 'danger');
+                    hideAutoSaveSpinner();
                 }
             } catch (error) {
                 console.error('Save error:', error);
                 showSaveStatus('Failed to save note: ' + error.message, 'danger');
+                hideAutoSaveSpinner();
             } finally {
                 isSaving = false;
                 autoSavePending = false;
-                hideAutoSaveSpinner();
+                // hideAutoSaveSpinner is already called on success
             }
         }
         
         function doneTyping() {
-            if (isDirty && !isSaving) {
+            if (isDirty && !isSaving && !isAutosaving) {
                 autoSavePending = true;
                 saveNote();
             }
@@ -231,31 +271,36 @@
             isDirty = true;
             clearTimeout(typingTimer);
             typingTimer = setTimeout(doneTyping, doneTypingInterval);
-            showSaveStatus('Unsaved changes...');
+            showSaveStatus('Unsaved changes...', 'info');
         });
         
         contentInput.addEventListener('input', function() {
             isDirty = true;
             clearTimeout(typingTimer);
             typingTimer = setTimeout(doneTyping, doneTypingInterval);
-            showSaveStatus('Unsaved changes...');
+            showSaveStatus('Unsaved changes...', 'info');
         });
         
         // Save on blur events as well
         titleInput.addEventListener('blur', function() {
-            if (isDirty && !isSaving) {
+            if (isDirty && !isSaving && !isAutosaving) {
                 saveNote();
             }
         });
         
         contentInput.addEventListener('blur', function() {
-            if (isDirty && !isSaving) {
+            if (isDirty && !isSaving && !isAutosaving) {
                 saveNote();
             }
         });
         
         // Save before user navigates away
         window.addEventListener('beforeunload', function(e) {
+            // Clear auto-save interval
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+            
             if (isDirty) {
                 // Try to save
                 saveNote();
@@ -273,7 +318,7 @@
             // First, if there are any unsaved changes, save them
             if (isDirty) {
                 // If there's an auto-save in progress, wait for it to complete
-                if (autoSavePending || isSaving) {
+                if (autoSavePending || isSaving || isAutosaving) {
                     // Try to save now and cancel any pending timeout
                     if (typingTimer) {
                         clearTimeout(typingTimer);
@@ -284,11 +329,11 @@
                     autoSavePending = false;
                     
                     // Wait for saving to finish if it's in progress
-                    if (isSaving) {
+                    if (isSaving || isAutosaving) {
                         showSaveStatus('Waiting for auto-save to complete...', 'info');
                         // Poll until isSaving is false
                         const waitForSave = () => {
-                            if (isSaving) {
+                            if (isSaving || isAutosaving) {
                                 setTimeout(waitForSave, 100);
                             } else {
                                 finishSubmission();
@@ -309,6 +354,9 @@
                 // No unsaved changes, proceed directly
                 finishSubmission();
             }
+            
+            // Restart the auto-save timer
+            setupAutoSave();
         });
         
         // Function to finish the form submission process
