@@ -127,10 +127,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Determine if the background is dark
                     const isDarkBg = isDarkColor(noteColor);
                     card.style.setProperty('color', isDarkBg ? '#ffffff' : '#000000', 'important');
+                    
+                    // Also apply the color to card-title and card-text elements
+                    const textColor = isDarkBg ? '#ffffff' : '#000000';
+                    applyColorToCardContents(card, textColor);
                 } else {
                     // For default notes, use dark theme styling
                     card.style.setProperty('background-color', '#343a40', 'important');
                     card.style.setProperty('color', '#f8f9fa', 'important');
+                    
+                    // Also apply the color to card-title and card-text elements
+                    applyColorToCardContents(card, '#f8f9fa');
                 }
                 
                 // Apply dark theme border
@@ -141,15 +148,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.style.setProperty('background-color', noteColor, 'important');
                 
                 // Set text color based on background color
+                let textColor;
                 if (noteColor === '#ffffff' || noteColor === '#fff' || isLightColor(noteColor)) {
-                    card.style.setProperty('color', '#000000', 'important');
+                    textColor = '#000000';
                 } else {
-                    card.style.setProperty('color', '#ffffff', 'important');
+                    textColor = '#ffffff';
                 }
+                
+                card.style.setProperty('color', textColor, 'important');
+                
+                // Also apply the color to card-title and card-text elements
+                applyColorToCardContents(card, textColor);
                 
                 card.style.setProperty('border-color', 'rgba(0, 0, 0, 0.125)', 'important');
             }
         });
+    }
+    
+    // Function to ensure all card content elements have the correct color
+    function applyColorToCardContents(card, textColor) {
+        // Apply text color to title
+        const cardTitle = card.querySelector('.card-title');
+        if (cardTitle) {
+            cardTitle.style.setProperty('color', textColor, 'important');
+        }
+        
+        // Apply text color to content
+        const cardText = card.querySelector('.card-text');
+        if (cardText) {
+            cardText.style.setProperty('color', textColor, 'important');
+        }
+        
+        // Apply to any other text elements that might be in the card
+        const cardBody = card.querySelector('.card-body');
+        if (cardBody) {
+            cardBody.style.setProperty('color', textColor, 'important');
+            
+            // Apply color to all text elements in the card body
+            const paragraphs = cardBody.querySelectorAll('p, h1, h2, h3, h4, h5, h6, div, span');
+            paragraphs.forEach(p => {
+                p.style.setProperty('color', textColor, 'important');
+            });
+        }
     }
     
     // Function to extract background color from style attribute
