@@ -185,7 +185,9 @@ use Illuminate\Support\Facades\Auth;
         const collaborationAlert = document.getElementById('collaborationAlert');
         
         let typingTimer;
+        let autoSaveTimer; // Timer for periodic auto-save
         const doneTypingInterval = 1000; // Save after 1 second of inactivity
+        const autoSaveInterval = 5000; // Auto-save every 5 seconds
         let isDirty = false;
         let currentNoteId = "{{ $note->id }}"; // Store the current note ID
         let lastTitleUpdate = null;
@@ -198,6 +200,13 @@ use Illuminate\Support\Facades\Auth;
         let lastHeartbeat = Date.now();
         let heartbeatInterval = 10000; // 10 seconds
         let userActivityTimeout = 30000; // 30 seconds
+        let isAutosaving = false; // Track if autosave is in progress
+
+        // Start periodic auto-save
+        setupAutoSave();
+        
+        // Show initial message about auto-save
+        showSaveStatus('Auto-save enabled - saving every 5 seconds', 'info');
         
         function showSaveStatus(message, type = 'info', isAutoSave = false) {
             saveStatus.textContent = message;
@@ -212,18 +221,21 @@ use Illuminate\Support\Facades\Auth;
                 
                 // Also hide auto-save spinner on success
                 hideAutoSaveSpinner();
+                isAutosaving = false;
             }
             
             if (isAutoSave) {
                 autoSaveSpinner.classList.remove('d-none');
                 // Fixed bug: using 'message' parameter instead of undefined 'text' variable
                 autoSaveText.textContent = 'Auto-saving...';
+                isAutosaving = true;
             }
         }
         
         function hideAutoSaveSpinner() {
             setTimeout(() => {
                 autoSaveSpinner.classList.add('d-none');
+                isAutosaving = false;
             }, 1000);
         }
         
@@ -293,6 +305,24 @@ use Illuminate\Support\Facades\Auth;
                     collaborationAlert.classList.add('d-none');
                 }
             }
+        }
+        
+        // Function to setup periodic auto-save
+        function setupAutoSave() {
+            // Clear any existing timer
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+            
+            // Set up periodic auto-save every 5 seconds
+            autoSaveTimer = setInterval(() => {
+                if (isDirty && autoSaveEnabled && !isAutosaving) {
+                    console.log('Auto-saving on timer...');
+                    saveNote(false);
+                }
+            }, autoSaveInterval);
+            
+            console.log('Periodic auto-save initialized - will save every ' + (autoSaveInterval/1000) + ' seconds');
         }
         
         // Handle autosave
@@ -408,7 +438,9 @@ use Illuminate\Support\Facades\Auth;
         function doneTyping() {
             console.log(`doneTyping called - autoSaveEnabled: ${autoSaveEnabled}`);
             // Always autosave content changes, regardless of collaboration status
-            saveNote();
+            if (!isAutosaving) {
+                saveNote();
+            }
         }
         
         // Throttle function to limit how often we send real-time updates
@@ -571,7 +603,7 @@ use Illuminate\Support\Facades\Auth;
             isDirty = true;
             clearTimeout(typingTimer);
             typingTimer = setTimeout(doneTyping, doneTypingInterval);
-            showSaveStatus('Unsaved changes...');
+            showSaveStatus('Unsaved changes...', 'info');
             
             // Send real-time update immediately 
             throttledTitleUpdate();
@@ -581,7 +613,7 @@ use Illuminate\Support\Facades\Auth;
             isDirty = true;
             clearTimeout(typingTimer);
             typingTimer = setTimeout(doneTyping, doneTypingInterval);
-            showSaveStatus('Unsaved changes...');
+            showSaveStatus('Unsaved changes...', 'info');
             
             // Remove broadcast for content updates, keep autosave only
         });
@@ -633,6 +665,11 @@ use Illuminate\Support\Facades\Auth;
             // Explicitly mark we are leaving
             leaveEditSession();
             
+            // Clear auto-save interval
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+            }
+            
             // Handle unsaved changes
             if (isDirty) {
                 saveNote();
@@ -663,6 +700,9 @@ use Illuminate\Support\Facades\Auth;
             e.preventDefault();
             saveNote(true); // Pass true to indicate a manual save
             isDirty = false; // Reset dirty flag when manually saving
+            
+            // Restart the auto-save timer
+            setupAutoSave();
         });
         
         // Debug logging for Echo connection
