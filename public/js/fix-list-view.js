@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const currentView = localStorage.getItem('notesViewPreference') || 'grid';
                 if (currentView === 'list') {
                     setTimeout(fixListViewInDarkMode, 50);
+                } else if (currentView === 'grid') {
+                    setTimeout(fixGridViewInDarkMode, 50);
                 }
             }
         });
@@ -115,35 +117,51 @@ document.addEventListener('DOMContentLoaded', function() {
         
         gridCards.forEach(card => {
             if (isDarkTheme) {
-                // Get the computed background color
-                const style = window.getComputedStyle(card);
-                const backgroundColor = style.backgroundColor;
+                // Get note color from data attribute or from inline style
+                const noteColor = card.getAttribute('data-note-color') || extractColorFromStyle(card.getAttribute('style'));
                 
-                // Parse the RGB values
-                const rgbMatch = backgroundColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
-                if (rgbMatch) {
-                    const r = parseInt(rgbMatch[1], 10);
-                    const g = parseInt(rgbMatch[2], 10);
-                    const b = parseInt(rgbMatch[3], 10);
+                if (noteColor && noteColor !== '#ffffff' && noteColor !== '#fff') {
+                    // If the note has a custom color, ensure it's applied and adjust text color
+                    card.style.setProperty('background-color', noteColor, 'important');
                     
-                    // Calculate brightness
-                    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-                    
-                    // Set text color based on background brightness
-                    if (brightness > 160) { // Light background
-                        card.style.setProperty('color', '#000000', 'important');
-                    } else { // Dark background
-                        card.style.setProperty('color', '#f8f9fa', 'important');
-                    }
+                    // Determine if the background is dark
+                    const isDarkBg = isDarkColor(noteColor);
+                    card.style.setProperty('color', isDarkBg ? '#ffffff' : '#000000', 'important');
                 } else {
-                    // Default to light text for dark mode if we can't parse the color
+                    // For default notes, use dark theme styling
+                    card.style.setProperty('background-color', '#343a40', 'important');
                     card.style.setProperty('color', '#f8f9fa', 'important');
                 }
                 
                 // Apply dark theme border
                 card.style.setProperty('border-color', 'rgba(255, 255, 255, 0.2)', 'important');
+            } else {
+                // Reset to default in light theme
+                const noteColor = card.getAttribute('data-note-color') || extractColorFromStyle(card.getAttribute('style')) || '#ffffff';
+                card.style.setProperty('background-color', noteColor, 'important');
+                
+                // Set text color based on background color
+                if (noteColor === '#ffffff' || noteColor === '#fff' || isLightColor(noteColor)) {
+                    card.style.setProperty('color', '#000000', 'important');
+                } else {
+                    card.style.setProperty('color', '#ffffff', 'important');
+                }
+                
+                card.style.setProperty('border-color', 'rgba(0, 0, 0, 0.125)', 'important');
             }
         });
+    }
+    
+    // Function to extract background color from style attribute
+    function extractColorFromStyle(styleString) {
+        if (!styleString) return null;
+        
+        // Extract background-color from style attribute
+        const match = styleString.match(/background-color:\s*([^;]+)/i);
+        if (match && match[1]) {
+            return match[1].trim();
+        }
+        return null;
     }
     
     // Function to determine if a color is dark (should use light text)
@@ -185,6 +203,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         });
     }
+    
+    // Run grid view fix when switching to grid view
+    gridViewBtn.addEventListener('click', function() {
+        setTimeout(fixGridViewInDarkMode, 50);
+    });
     
     // Observe for theme class changes on body (use the existing observer)
     observer.disconnect();
