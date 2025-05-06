@@ -55,6 +55,15 @@ if ('serviceWorker' in navigator) {
             .then(registration => {
                 console.log('Service Worker đã được đăng ký thành công với phạm vi:', registration.scope);
                 
+                // Kiểm tra cập nhật
+                checkForUpdates(registration);
+                
+                // Thiết lập kiểm tra cập nhật định kỳ (mỗi giờ)
+                setInterval(() => {
+                    registration.update();
+                    checkForUpdates(registration);
+                }, 60 * 60 * 1000);
+                
                 // Kiểm tra và đồng bộ hóa nếu cần
                 if (navigator.onLine && registration.sync) {
                     registration.sync.register('sync-notes')
@@ -68,8 +77,75 @@ if ('serviceWorker' in navigator) {
         // Lắng nghe thông báo từ Service Worker
         navigator.serviceWorker.addEventListener('message', (event) => {
             console.log('Nhận tin nhắn từ Service Worker:', event.data);
-            // Xử lý thông báo từ Service Worker
+            // Xử lý tin nhắn SW_UPDATED - có phiên bản mới
+            if (event.data && event.data.type === 'SW_UPDATED') {
+                showUpdateNotification();
+            }
         });
+    });
+}
+
+// Kiểm tra phiên bản mới của service worker
+function checkForUpdates(registration) {
+    // Kiểm tra nếu có waiting worker (phiên bản đã cập nhật nhưng chưa kích hoạt)
+    if (registration.waiting) {
+        showUpdateNotification();
+        return;
+    }
+    
+    // Theo dõi khi có cập nhật
+    registration.addEventListener('updatefound', () => {
+        // Lấy service worker mới đang cài đặt 
+        const newWorker = registration.installing;
+        
+        // Theo dõi trạng thái cài đặt
+        newWorker.addEventListener('statechange', () => {
+            // Nếu cài đặt hoàn tất, hiển thị thông báo
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateNotification();
+            }
+        });
+    });
+}
+
+// Hiển thị thông báo cập nhật và hỏi người dùng có muốn làm mới
+function showUpdateNotification() {
+    // Kiểm tra xem đã hiển thị thông báo chưa để tránh hiển thị nhiều lần
+    if (document.getElementById('update-notification')) {
+        return;
+    }
+    
+    const newNotification = document.createElement('div');
+    newNotification.id = 'update-notification';
+    newNotification.className = 'update-notification visible';
+    
+    newNotification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-title">Cập nhật mới!</div>
+            <div class="notification-message">Ứng dụng có phiên bản mới. Làm mới trang để cập nhật?</div>
+            <div class="notification-actions">
+                <button id="update-now" class="btn btn-primary">Cập nhật ngay</button>
+                <button id="update-later" class="btn btn-secondary">Để sau</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(newNotification);
+    
+    // Xử lý nút cập nhật ngay
+    document.getElementById('update-now').addEventListener('click', () => {
+        // Gửi tin nhắn tới service worker để bỏ qua chờ đợi và kích hoạt
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+        
+        // Tải lại trang
+        window.location.reload();
+    });
+    
+    // Xử lý nút cập nhật sau
+    document.getElementById('update-later').addEventListener('click', () => {
+        newNotification.classList.remove('visible');
     });
 }
 

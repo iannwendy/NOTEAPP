@@ -911,4 +911,48 @@ body.dark-theme .custom-label-check:hover {
 
 body.dark-theme .form-check-label .d-inline-block {
     border-color: #555 !important;
+}
+
+/* Service Worker Update Notification */
+.update-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    max-width: 350px;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.update-notification.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.update-notification .notification-title {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.update-notification .notification-message {
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.update-notification .notification-actions {
+    display: flex;
+    gap: 10px;
+}
+
+body.dark-theme .update-notification {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #f8f9fa;
 } 

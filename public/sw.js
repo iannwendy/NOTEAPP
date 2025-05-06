@@ -1,3 +1,4 @@
+const SW_VERSION = '1.0.5';
 const CACHE_NAME = 'notes-app-cache-v5';
 const STATIC_ASSETS = [
   '/',
@@ -47,6 +48,16 @@ self.addEventListener('activate', (event) => {
           return caches.delete(cacheName);
         })
       );
+    }).then(() => {
+      // Thông báo cho client biết service worker đã cập nhật
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: SW_VERSION
+          });
+        });
+      });
     })
   );
   self.clients.claim();
@@ -198,6 +209,13 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'CHECK_VERSION') {
+    event.ports[0].postMessage({
+      type: 'VERSION_INFO',
+      version: SW_VERSION
+    });
   }
   
   if (event.data && event.data.type === 'ONLINE_STATUS_CHANGE') {
