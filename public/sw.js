@@ -1,4 +1,4 @@
-const CACHE_NAME = 'notes-app-cache-v4';
+const CACHE_NAME = 'notes-app-cache-v5';
 const STATIC_ASSETS = [
   '/',
   '/offline.html',
