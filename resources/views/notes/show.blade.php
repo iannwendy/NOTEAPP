@@ -131,9 +131,9 @@
                 <div class="card-footer note-date-footer">
                     <div class="d-flex justify-content-between">
                         <div>
-                            Created: {{ $note->created_at->format('M d, Y h:i A') }}
+                            Created: {{ $note->getFormattedCreatedAt() }}
                             @if($note->created_at != $note->updated_at)
-                                | Updated: {{ $note->updated_at->format('M d, Y h:i A') }}
+                                | Updated: {{ $note->getFormattedUpdatedAt() }}
                             @endif
                         </div>
                         @isset($isShared)

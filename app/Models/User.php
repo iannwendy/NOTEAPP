@@ -95,4 +95,26 @@ class User extends Authenticatable implements MustVerifyEmail
         // Return default avatar if no avatar or file doesn't exist
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=random&color=fff';
     }
+    
+    /**
+     * Get the created_at timestamp formatted in local timezone
+     * 
+     * @param string $format
+     * @return string
+     */
+    public function getFormattedCreatedAt($format = 'F j, Y')
+    {
+        return $this->created_at->format($format);
+    }
+    
+    /**
+     * Get the email_verified_at timestamp formatted in local timezone
+     * 
+     * @param string $format
+     * @return string|null
+     */
+    public function getFormattedVerifiedAt($format = 'F j, Y')
+    {
+        return $this->email_verified_at ? $this->email_verified_at->format($format) : null;
+    }
 }

@@ -131,4 +131,26 @@ class Note extends Model
         $share = $this->sharedWith()->where('users.id', $userId)->first();
         return $share ? $share->pivot->permission : null;
     }
+    
+    /**
+     * Get the created_at timestamp formatted in local timezone
+     * 
+     * @param string $format
+     * @return string
+     */
+    public function getFormattedCreatedAt($format = 'M d, Y h:i A')
+    {
+        return $this->created_at->format($format);
+    }
+    
+    /**
+     * Get the updated_at timestamp formatted in local timezone
+     * 
+     * @param string $format
+     * @return string
+     */
+    public function getFormattedUpdatedAt($format = 'M d, Y h:i A')
+    {
+        return $this->updated_at->format($format);
+    }
 }

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Date;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,5 +42,9 @@ class AppServiceProvider extends ServiceProvider
         
         // Set schema string length if running on older MySQL/MariaDB
         Schema::defaultStringLength(191);
+        
+        // Set the default timezone for Carbon instances
+        Date::use(Carbon::class);
+        Carbon::setToStringFormat('Y-m-d H:i:s');
     }
 }

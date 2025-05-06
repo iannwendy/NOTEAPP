@@ -866,7 +866,7 @@ use Illuminate\Support\Facades\Auth;
                 // Update debug panel
                 const debugInfo = document.querySelector('#collaborationAlert .mt-2.text-muted small');
                 if (debugInfo) {
-                    debugInfo.textContent = `Last event: title update from ${e.userName} at ${new Date().toLocaleTimeString()}`;
+                    debugInfo.textContent = `Last event: title update from ${e.userName} at ${formatLocalDate(e.timestamp, 'time')}`;
                 }
                 
                 // Only update if the change came from someone else

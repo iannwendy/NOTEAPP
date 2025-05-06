@@ -9,6 +9,7 @@ class OfflineDB {
     this.NOTES_STORE = 'notes';
     this.PENDING_STORE = 'pending-operations';
     this.db = null;
+    this.ready = false;
     
     // Khởi tạo database
     this.init();
@@ -20,7 +21,7 @@ class OfflineDB {
    */
   init() {
     return new Promise((resolve, reject) => {
-      if (this.db) {
+      if (this.db && this.ready) {
         resolve(this.db);
         return;
       }
@@ -58,6 +59,7 @@ class OfflineDB {
       
       request.onsuccess = (event) => {
         this.db = event.target.result;
+        this.ready = true;
         console.log('IndexedDB đã được mở thành công');
         resolve(this.db);
       };
@@ -67,6 +69,14 @@ class OfflineDB {
         reject(event.target.error);
       };
     });
+  }
+  
+  /**
+   * Lấy timestamp hiện tại theo định dạng ISO với múi giờ của người dùng
+   * @returns {string} - Chuỗi ISO8601 với múi giờ của người dùng
+   */
+  getCurrentTimestamp() {
+    return new Date().toISOString();
   }
   
   /**
@@ -83,7 +93,7 @@ class OfflineDB {
           
           // Đảm bảo note có updated_at
           if (!note.updated_at) {
-            note.updated_at = new Date().toISOString();
+            note.updated_at = this.getCurrentTimestamp();
           }
           
           const request = store.put(note); // Sử dụng put để cập nhật nếu đã tồn tại
@@ -116,7 +126,7 @@ class OfflineDB {
           
           notes.forEach(note => {
             if (!note.updated_at) {
-              note.updated_at = new Date().toISOString();
+              note.updated_at = this.getCurrentTimestamp();
             }
             store.put(note);
           });
@@ -287,7 +297,7 @@ class OfflineDB {
             const operation = event.target.result;
             if (operation) {
               operation.syncStatus = status;
-              operation.syncedAt = new Date().toISOString();
+              operation.syncedAt = this.getCurrentTimestamp();
               
               const updateRequest = store.put(operation);
               
@@ -360,6 +370,36 @@ class OfflineDB {
           };
           
           request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+      });
+  }
+  
+  /**
+   * Lấy tất cả các thao tác đang chờ xử lý
+   * @returns {Promise<Array>}
+   */
+  getAllPendingOperations() {
+    return this.init()
+      .then(db => {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction([this.PENDING_STORE], 'readonly');
+          const store = transaction.objectStore(this.PENDING_STORE);
+          const operations = [];
+          
+          store.openCursor().onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+              operations.push(cursor.value);
+              cursor.continue();
+            } else {
+              resolve(operations);
+            }
+          };
+          
+          transaction.onerror = (event) => {
+            console.error('Lỗi khi lấy các thao tác đang chờ:', event.target.error);
             reject(event.target.error);
           };
         });

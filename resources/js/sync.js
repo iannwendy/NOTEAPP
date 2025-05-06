@@ -9,6 +9,10 @@ class SyncManager {
     this.syncInProgress = false;
     this.syncQueue = [];
     this.syncListeners = [];
+    this.offlineDB = offlineDB;
+    
+    // Load pending operations from IndexedDB
+    this.loadPendingOperations();
     
     // Đăng ký các sự kiện mạng
     window.addEventListener('online', this.handleOnlineStatusChange.bind(this));
@@ -315,6 +319,11 @@ class SyncManager {
    * @returns {Promise}
    */
   saveNote(note, isNew = false) {
+    // Đảm bảo note có updated_at và format đúng
+    if (!note.updated_at) {
+      note.updated_at = offlineDB.getCurrentTimestamp();
+    }
+    
     // Lưu ghi chú vào IndexedDB
     return offlineDB.saveNote(note)
       .then(savedNote => {
@@ -489,6 +498,27 @@ class SyncManager {
           });
         }
         return localNote;
+      });
+  }
+  
+  /**
+   * Load pending operations from IndexedDB
+   */
+  loadPendingOperations() {
+    offlineDB.getAllPendingOperations()
+      .then(operations => {
+        if (operations && operations.length > 0) {
+          this.syncQueue = operations;
+          console.log(`Loaded ${operations.length} pending operations from IndexedDB`);
+          
+          // Attempt to process the queue if online
+          if (this.isOnline && !this.syncInProgress) {
+            this.processQueue();
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Error loading pending operations:', err);
       });
   }
 }

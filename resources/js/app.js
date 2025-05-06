@@ -259,7 +259,7 @@ function setupOfflineAutoSave() {
                     title: title,
                     content: content,
                     color: color,
-                    updated_at: new Date().toISOString()
+                    updated_at: syncManager.offlineDB ? syncManager.offlineDB.getCurrentTimestamp() : new Date().toISOString()
                 };
                 
                 syncManager.saveNote(note, !noteId)
@@ -362,3 +362,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+/**
+ * Format a date string to the user's local timezone
+ * 
+ * @param {string} dateString - ISO 8601 date string
+ * @param {string} format - Optional format (default: full datetime)
+ * @return {string} Formatted date string
+ */
+window.formatLocalDate = function(dateString, format = 'full') {
+    const date = new Date(dateString);
+    
+    if (format === 'full') {
+        return date.toLocaleString();
+    } else if (format === 'date') {
+        return date.toLocaleDateString();
+    } else if (format === 'time') {
+        return date.toLocaleTimeString();
+    } else if (format === 'relative') {
+        // Simple relative time formatter
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        if (diffSec < 60) return 'just now';
+        if (diffMin < 60) return `${diffMin}m ago`;
+        if (diffHour < 24) return `${diffHour}h ago`;
+        if (diffDay < 7) return `${diffDay}d ago`;
+        
+        return date.toLocaleDateString();
+    }
+    
+    return date.toLocaleString();
+};

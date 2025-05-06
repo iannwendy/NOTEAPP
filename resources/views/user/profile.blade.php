@@ -46,13 +46,13 @@
                             <tbody>
                                 <tr>
                                     <th style="width: 30%">Member Since</th>
-                                    <td>{{ $user->created_at->format('F j, Y') }}</td>
+                                    <td>{{ $user->getFormattedCreatedAt() }}</td>
                                 </tr>
                                 <tr>
                                     <th>Email Verified</th>
                                     <td>
                                         @if($user->email_verified_at)
-                                            <span class="text-success">Verified on {{ $user->email_verified_at->format('F j, Y') }}</span>
+                                            <span class="text-success">Verified on {{ $user->getFormattedVerifiedAt() }}</span>
                                         @else
                                             <span class="text-danger">Not verified</span>
                                         @endif
