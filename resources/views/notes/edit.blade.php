@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Auth;
                             <i class="fas fa-users me-2"></i>
                             <div>
                                 <strong>Collaborative Editing</strong>
-                                <p class="mb-0">This note is being edited in real-time. Any changes you make will be visible to other collaborators immediately.</p>
+                                <p class="mb-0">This note is being edited with others. Only the title is shared in real-time. Content changes are only saved locally with autosave.</p>
                             </div>
                         </div>
                     </div>
@@ -402,10 +402,9 @@ use Illuminate\Support\Facades\Auth;
         }
         
         function doneTyping() {
-            console.log(`doneTyping called - autoSaveEnabled: ${autoSaveEnabled}, collaborationActive: ${collaborationActive}`);
-            if (autoSaveEnabled || !collaborationActive) {
-                saveNote();
-            }
+            console.log(`doneTyping called - autoSaveEnabled: ${autoSaveEnabled}`);
+            // Always autosave content changes, regardless of collaboration status
+            saveNote();
         }
         
         // Throttle function to limit how often we send real-time updates
@@ -426,11 +425,7 @@ use Illuminate\Support\Facades\Auth;
             }
         }, 50);
         
-        const throttledContentUpdate = throttle(function() {
-            if (!isProcessingExternalUpdate) {
-                sendRealTimeUpdate('content', content.value);
-            }
-        }, 50);
+        // Remove throttled content update - no broadcast for content field
         
         // Update the collaborators list
         function updateCollaboratorsList() {
@@ -584,8 +579,7 @@ use Illuminate\Support\Facades\Auth;
             typingTimer = setTimeout(doneTyping, doneTypingInterval);
             showSaveStatus('Unsaved changes...');
             
-            // Send real-time update immediately
-            throttledContentUpdate();
+            // Remove broadcast for content updates, keep autosave only
         });
         
         // Save on blur events as well, but only if autosave is enabled
@@ -877,67 +871,9 @@ use Illuminate\Support\Facades\Auth;
                 }
             });
 
-            // Listen for note content updates
-            channel.listen('.note.content.updated', function(e) {
-                console.log('Content update event received:', e);
-                
-                // Update debug panel
-                const debugInfo = document.querySelector('#collaborationAlert .mt-2.text-muted small');
-                if (debugInfo) {
-                    debugInfo.textContent = `Last event: content update from ${e.userName} at ${new Date().toLocaleTimeString()}`;
-                }
-                
-                // Only update if the change came from someone else
-                if (e.userId !== {{ Auth::id() }}) {
-                    isProcessingExternalUpdate = true;
-                    
-                    // Update the user's lastSeen timestamp
-                    if (collaborators[e.userId]) {
-                        collaborators[e.userId].lastSeen = Date.now();
-                    } else {
-                        // Add unknown user to collaborators list if not already there
-                        console.log('Adding unknown user from content update:', e.userId, e.userName);
-                        collaborators[e.userId] = {
-                            id: e.userId,
-                            name: e.userName,
-                            avatar_url: e.userAvatarUrl,
-                            lastSeen: Date.now()
-                        };
-                        updateCollaboratorsList();
-                    }
-                    
-                    // Save current focus and selection state
-                    const hadFocus = document.activeElement === content;
-                    const selectionStart = content.selectionStart;
-                    const selectionEnd = content.selectionEnd;
-                    
-                    // Set the content value
-                    content.value = e.content;
-                    
-                    // Restore focus and selection if needed
-                    if (hadFocus) {
-                        content.focus();
-                        // Try to maintain cursor position if possible
-                        try {
-                            content.setSelectionRange(selectionStart, selectionEnd);
-                        } catch (e) {
-                            // Silently fail if we can't restore selection
-                        }
-                    }
-                    
-                    // Trigger an input event to ensure any dynamic content handlers fire
-                    const inputEvent = new Event('input', { bubbles: true });
-                    content.dispatchEvent(inputEvent);
-                    
-                    // Show update notification
-                    showSaveStatus(`${e.userName} updated the content`, 'info');
-                    
-                    isProcessingExternalUpdate = false;
-                } else {
-                    console.log('Ignoring own content update event');
-                }
-            });
-
+            // Disable listening for content updates from broadcast
+            /* Removed content update listener to prevent receiving updates from other users */
+            
             // Listen for user left edit session
             channel.listen('.user.left.edit.session', (e) => {
                 console.log('User left edit session event received:', e);
@@ -1073,7 +1009,7 @@ use Illuminate\Support\Facades\Auth;
         });
 
         // Listen for any events on the channel for debugging
-        for (let evt of ['.note.title.updated', '.note.content.updated', '.user.left.edit.session']) {
+        for (let evt of ['.note.title.updated', '.user.left.edit.session']) {
             channel.listen(evt, function(e) {
                 console.log(`DEBUG - Event ${evt} received:`, e);
             });
